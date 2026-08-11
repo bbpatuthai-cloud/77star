@@ -1,0 +1,130 @@
+{
+  "app": {
+    "meta": {
+      "title": "ระบบจัดการร้าน",
+      "language": "th",
+      "charset": "UTF-8",
+      "viewport": "width=device-width, initial-scale=1.0"
+    },
+    "ui": {
+      "sidebar": {
+        "logoId": "displayStoreName",
+        "defaultLogoText": "★ 77 STAR",
+        "menu": [
+          { "id": "dashboard", "icon": "📊", "label": "Dashboard", "isActive": true },
+          { "id": "products", "icon": "📦", "label": "สินค้า", "isActive": false },
+          { "id": "orders", "icon": "🧾", "label": "ออเดอร์", "isActive": false },
+          { "id": "sales", "icon": "💰", "label": "ยอดขาย", "isActive": false },
+          { "id": "customers", "icon": "👥", "label": "ลูกค้า", "isActive": false },
+          { "id": "settings", "icon": "⚙️", "label": "ตั้งค่า", "isActive": false }
+        ]
+      },
+      "pages": [
+        {
+          "id": "dashboard",
+          "title": "Dashboard",
+          "components": {
+            "summaryCards": [
+              { "label": "ยอดขายวันนี้", "icon": "💰", "value": "฿0" },
+              { "label": "ออเดอร์วันนี้", "icon": "🧾", "value": "0" },
+              { "label": "สินค้าทั้งหมด", "icon": "📦", "dynamicValueId": "dashboardProductCount" },
+              { "label": "ลูกค้าทั้งหมด", "icon": "👥", "value": "0" }
+            ],
+            "recentOrders": {
+              "emptyMessage": "ยังไม่มีออเดอร์"
+            }
+          }
+        },
+        {
+          "id": "products",
+          "title": "จัดการสินค้า",
+          "components": {
+            "addProductForm": {
+              "fields": [
+                { "id": "productName", "label": "ชื่อสินค้า", "type": "text", "placeholder": "เช่น เสื้อยืดสีดำ" },
+                { "id": "productPrice", "label": "ราคา", "type": "number", "placeholder": "399" }
+              ],
+              "actionButton": "+ เพิ่มสินค้า"
+            },
+            "productList": {
+              "containerId": "productList",
+              "emptyMessage": "ยังไม่มีสินค้า กดเพิ่มสินค้าด้านบนได้เลย"
+            }
+          }
+        },
+        {
+          "id": "settings",
+          "title": "ตั้งค่าร้าน",
+          "components": {
+            "settingsForm": {
+              "fields": [
+                { "id": "settingStoreName", "label": "ชื่อร้าน (อัปเดตโลโก้ทันที)", "type": "text", "defaultValue": "77 STAR" },
+                { 
+                  "id": "settingCurrency", 
+                  "label": "สกุลเงิน", 
+                  "type": "select", 
+                  "options": [
+                    { "value": "THB", "label": "THB - บาท" },
+                    { "value": "USD", "label": "USD - ดอลลาร์" }
+                  ] 
+                }
+              ],
+              "actionButton": "บันทึกการตั้งค่า"
+            }
+          }
+        }
+      ]
+    },
+    "stateManagement": {
+      "storageEngine": "localStorage",
+      "storageKey": "myStoreData",
+      "schema": {
+        "storeName": "string",
+        "currency": "string",
+        "products": [
+          {
+            "name": "string",
+            "price": "number"
+          }
+        ]
+      },
+      "defaultState": {
+        "storeName": "77 STAR",
+        "currency": "THB",
+        "products": []
+      }
+    },
+    "methods": [
+      {
+        "name": "initApp",
+        "description": "กำหนดค่าเริ่มต้น อัปเดต UI และดึงข้อมูลจาก Local Storage เมื่อโหลดเว็บ"
+      },
+      {
+        "name": "updateStoreUI",
+        "description": "อัปเดตชื่อร้านค้าและจำนวนสินค้าบน Dashboard"
+      },
+      {
+        "name": "renderProducts",
+        "description": "แสดงรายการสินค้าทั้งหมดลงในหน้าจัดการสินค้า"
+      },
+      {
+        "name": "addProduct",
+        "description": "รับค่าจากฟอร์ม เพิ่มสินค้าลง Array และบันทึกลง Local Storage"
+      },
+      {
+        "name": "deleteProduct",
+        "parameters": ["index"],
+        "description": "ลบสินค้าตาม index ที่เลือก และอัปเดต Local Storage"
+      },
+      {
+        "name": "saveSettings",
+        "description": "บันทึกชื่อร้านและสกุลเงินใหม่ลง Local Storage"
+      },
+      {
+        "name": "showPage",
+        "parameters": ["page", "button"],
+        "description": "สลับการแสดงผลหน้าต่าง ๆ (Tab) และเปลี่ยนสถานะเมนูที่ถูกเลือก"
+      }
+    ]
+  }
+}
