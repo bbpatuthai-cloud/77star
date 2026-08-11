@@ -6,7 +6,7 @@
 <title>ระบบจัดการร้าน</title>
 
 <style>
-/* คง CSS เดิมไว้ทั้งหมด */
+/* CSS เหมือนเดิมทั้งหมด */
 *{box-sizing:border-box}
 body{ margin:0; font-family:Arial,"Tahoma",sans-serif; background:#0b0910; color:#fff; }
 .sidebar{ position:fixed; left:0; top:0; bottom:0; width:240px; background:#15101b; border-right:1px solid #382540; padding:25px 15px; }
@@ -80,7 +80,6 @@ input:focus,select:focus{ border-color:#d98aff; }
 </aside>
 
 <main class="main">
-
 <div class="topbar">
     <h1 id="pageTitle">Dashboard</h1>
     <div class="status">● ระบบออนไลน์</div>
@@ -88,7 +87,6 @@ input:focus,select:focus{ border-color:#d98aff; }
 
 <!-- DASHBOARD -->
 <section id="dashboard" class="page active">
-    <!-- (ลดทอนเนื้อหาการ์ดลงเพื่อให้สั้นกระชับ สามารถใช้โค้ดเดิมของคุณตรงนี้ได้เลย) -->
     <div class="cards">
         <div class="card"><div class="icon">💰</div><div class="label">ยอดขายวันนี้</div><div class="value">฿0</div></div>
         <div class="card"><div class="icon">🧾</div><div class="label">ออเดอร์วันนี้</div><div class="value">0</div></div>
@@ -124,12 +122,13 @@ input:focus,select:focus{ border-color:#d98aff; }
     </div>
     <div class="section">
         <div class="products" id="productList">
-            <!-- สินค้าจะถูกสร้างตรงนี้ด้วย Javascript -->
+            <!-- ข้อมูลจะถูกดึงจาก Firebase แบบ Realtime มาแสดงที่นี่ -->
+            <div class="empty" style="grid-column: 1 / -1;">กำลังโหลดข้อมูล...</div>
         </div>
     </div>
 </section>
 
-<!-- ORDERS, SALES, CUSTOMERS ซ่อนไว้ชั่วคราวเพื่อความสั้น (ใช้โค้ดเดิมของคุณได้เลย) -->
+<!-- หน้าอื่นๆ -->
 <section id="orders" class="page"><div class="section"><div class="panel"><div class="empty">ระบบอยู่ระหว่างการพัฒนา</div></div></div></section>
 <section id="sales" class="page"><div class="section"><div class="panel"><div class="empty">ระบบอยู่ระหว่างการพัฒนา</div></div></div></section>
 <section id="customers" class="page"><div class="section"><div class="panel"><div class="empty">ระบบอยู่ระหว่างการพัฒนา</div></div></div></section>
@@ -160,151 +159,61 @@ input:focus,select:focus{ border-color:#d98aff; }
 
 </main>
 
-<script>
-// 1. กำหนดค่าเริ่มต้นและดึงข้อมูลจาก Local Storage
-let storeData = JSON.parse(localStorage.getItem('myStoreData')) || {
-    storeName: "77 STAR",
-    currency: "THB",
-    products: []
-};
-
-// 2. ฟังก์ชันอัปเดตหน้าจอเมื่อโหลดเว็บ
-function initApp() {
-    document.getElementById('settingStoreName').value = storeData.storeName;
-    document.getElementById('settingCurrency').value = storeData.currency;
-    document.title = storeData.storeName + " - ระบบจัดการร้าน";
-    
-    updateStoreUI();
-    renderProducts();
-}
-
-// 3. ฟังก์ชันอัปเดตชื่อร้านและสัญลักษณ์เงิน
-function updateStoreUI() {
-    document.getElementById('displayStoreName').innerHTML = `★ <span>${storeData.storeName}</span>`;
-    document.getElementById('dashboardProductCount').innerText = storeData.products.length;
-}
-
-// 4. ฟังก์ชันแสดงรายการสินค้า
-function renderProducts() {
-    const list = document.getElementById("productList");
-    list.innerHTML = "";
-    
-    if(storeData.products.length === 0) {
-        list.innerHTML = `<div class="empty" style="grid-column: 1 / -1;">ยังไม่มีสินค้า กดเพิ่มสินค้าด้านบนได้เลย</div>`;
-        return;
-    }
-
-    let currencySymbol = storeData.currency === "THB" ? "฿" : "$";
-
-    storeData.products.forEach((product, index) => {
-        list.innerHTML += `
-            <div class="product">
-                <button class="delete-btn" onclick="deleteProduct(${index})">ลบ</button>
-                <h3>${product.name}</h3>
-                <div class="price">${currencySymbol}${Number(product.price).toLocaleString()}</div>
-                <p><span class="badge success">มีสินค้า</span></p>
-            </div>
-        `;
-    });
-}
-
-// 5. ฟังก์ชันเพิ่มสินค้า (บันทึกข้อมูลลงเครื่อง)
-function addProduct() {
-    const name = document.getElementById("productName").value.trim();
-    const price = document.getElementById("productPrice").value;
-
-    if(!name || !price) {
-        alert("กรุณากรอกชื่อสินค้าและราคา");
-        return;
-    }
-
-    // เพิ่มลงใน Array
-    storeData.products.push({ name: name, price: price });
-    
-    // บันทึกลง Local Storage
-    localStorage.setItem('myStoreData', JSON.stringify(storeData));
-
-    // ล้างค่าฟอร์มและโหลดหน้าใหม่
-    document.getElementById("productName").value = "";
-    document.getElementById("productPrice").value = "";
-    
-    updateStoreUI();
-    renderProducts();
-    alert("เพิ่มสินค้าเรียบร้อยแล้ว");
-}
-
-// 6. ฟังก์ชันลบสินค้า
-function deleteProduct(index) {
-    if(confirm("ต้องการลบสินค้านี้ใช่หรือไม่?")) {
-        storeData.products.splice(index, 1);
-        localStorage.setItem('myStoreData', JSON.stringify(storeData));
-        updateStoreUI();
-        renderProducts();
-    }
-}
-
-// 7. ฟังก์ชันบันทึกการตั้งค่า
-function saveSettings() {
-    storeData.storeName = document.getElementById('settingStoreName').value;
-    storeData.currency = document.getElementById('settingCurrency').value;
-    
-    localStorage.setItem('myStoreData', JSON.stringify(storeData));
-    
-    updateStoreUI();
-    renderProducts(); // เพื่ออัปเดตสกุลเงิน
-    document.title = storeData.storeName + " - ระบบจัดการร้าน";
-    
-    alert("บันทึกการตั้งค่าเรียบร้อยแล้ว");
-}
-
-// ฟังก์ชันสลับเมนู (โค้ดเดิมของคุณ)
-function showPage(page, button){
-    document.querySelectorAll(".page").forEach(el => el.classList.remove("active"));
-    document.getElementById(page).classList.add("active");
-    
-    document.querySelectorAll(".menu button").forEach(el => el.classList.remove("active"));
-    button.classList.add("active");
-
-    const titles = {
-        dashboard:"Dashboard", products:"จัดการสินค้า", orders:"ออเดอร์",
-        sales:"ยอดขาย", customers:"ลูกค้า", settings:"ตั้งค่า"
-    };
-    document.getElementById("pageTitle").textContent = titles[page];
-}
-
-// เริ่มทำงานเมื่อเปิดหน้าเว็บ
-window.onload = initApp;
-
-</script>
-
-</body>
-</html>
+<!-- นำเข้า Firebase Scripts -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
 <script>
-// 1. ก๊อปปี้ firebaseConfig จาก Firebase ของคุณมาวางทับตรงนี้เลยครับ
+// 1. นำข้อมูลจาก Firebase Config ของคุณมาใส่ตรงนี้
 const firebaseConfig = {
   apiKey: "รหัสของคุณ",
   authDomain: "รหัสของคุณ",
-  databaseURL: "https://star-abfc3-default-rtdb.firebaseio.com", // URL จากรูปของคุณ
+  databaseURL: "https://star-abfc3-default-rtdb.firebaseio.com",
   projectId: "รหัสของคุณ",
   storageBucket: "รหัสของคุณ",
   messagingSenderId: "รหัสของคุณ",
   appId: "รหัสของคุณ"
 };
 
-// 2. เริ่มต้นการเชื่อมต่อ Firebase
+// 2. เริ่มต้นระบบ Firebase
 firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
+
+// สร้างกล่องข้อมูลสำหรับเก็บ สินค้า และ การตั้งค่า
 const productsRef = database.ref('storeData/products');
+const settingsRef = database.ref('storeData/settings');
 
-// กำหนดตัวแปรสกุลเงิน
+// ตัวแปรส่วนกลาง
 let currentCurrency = "THB";
+let cachedProducts = null;
 
-// 3. ฟังก์ชันดึงข้อมูลแบบ Realtime (ข้อมูลจะเปลี่ยนทันทีที่มีคนแก้)
+// ==========================================
+// ระบบดึงข้อมูลตั้งค่า (Realtime Settings)
+// ==========================================
+settingsRef.on('value', (snapshot) => {
+    const data = snapshot.val() || { storeName: "77 STAR", currency: "THB" };
+    
+    currentCurrency = data.currency;
+    
+    // อัปเดตหน้าตาเว็บทันทีที่มีการตั้งค่าใหม่
+    document.getElementById('settingStoreName').value = data.storeName;
+    document.getElementById('settingCurrency').value = data.currency;
+    document.getElementById('displayStoreName').innerHTML = `★ <span>${data.storeName}</span>`;
+    document.title = data.storeName + " - ระบบจัดการร้าน";
+
+    // สั่งให้วาดรายการสินค้าใหม่เพื่อให้สกุลเงินเปลี่ยนตาม
+    if (cachedProducts !== null) renderProducts(cachedProducts);
+});
+
+// ==========================================
+// ระบบดึงข้อมูลสินค้า (Realtime Products)
+// ==========================================
 productsRef.on('value', (snapshot) => {
-    const data = snapshot.val();
+    cachedProducts = snapshot.val();
+    renderProducts(cachedProducts);
+});
+
+function renderProducts(data) {
     const list = document.getElementById("productList");
     list.innerHTML = "";
     
@@ -312,7 +221,6 @@ productsRef.on('value', (snapshot) => {
     let currencySymbol = currentCurrency === "THB" ? "฿" : "$";
 
     if (data) {
-        // วนลูปสร้างรายการสินค้า
         Object.keys(data).forEach(key => {
             productCount++;
             const product = data[key];
@@ -329,11 +237,14 @@ productsRef.on('value', (snapshot) => {
         list.innerHTML = `<div class="empty" style="grid-column: 1 / -1;">ยังไม่มีสินค้า กดเพิ่มสินค้าด้านบนได้เลย</div>`;
     }
 
-    // อัปเดตจำนวนสินค้าหน้า Dashboard
     document.getElementById('dashboardProductCount').innerText = productCount;
-});
+}
 
-// 4. ฟังก์ชันเพิ่มสินค้า (ส่งข้อมูลขึ้น Firebase)
+// ==========================================
+// ระบบปุ่มทำงานต่างๆ (เชื่อมกับ Firebase)
+// ==========================================
+
+// ฟังก์ชันเพิ่มสินค้า
 function addProduct() {
     const name = document.getElementById("productName").value.trim();
     const price = document.getElementById("productPrice").value;
@@ -343,22 +254,34 @@ function addProduct() {
         return;
     }
 
-    // สั่ง push ข้อมูลขึ้น Database
     productsRef.push({ name: name, price: price });
     
-    // ล้างค่าฟอร์ม
     document.getElementById("productName").value = "";
     document.getElementById("productPrice").value = "";
 }
 
-// 5. ฟังก์ชันลบสินค้า
+// ฟังก์ชันลบสินค้า
 function deleteProduct(id) {
     if(confirm("ต้องการลบสินค้านี้ใช่หรือไม่?")) {
         database.ref('storeData/products/' + id).remove();
     }
 }
 
-// ฟังก์ชันสลับเมนู (โค้ดเดิมของคุณ)
+// ฟังก์ชันบันทึกการตั้งค่า
+function saveSettings() {
+    const newName = document.getElementById('settingStoreName').value;
+    const newCurrency = document.getElementById('settingCurrency').value;
+
+    // บันทึกขึ้น Firebase ตรงๆ (เครื่องอื่นจะเปลี่ยนตามทันที)
+    settingsRef.set({
+        storeName: newName,
+        currency: newCurrency
+    }).then(() => {
+        alert("อัปเดตการตั้งค่าเข้าระบบออนไลน์แล้ว!");
+    });
+}
+
+// ฟังก์ชันสลับเมนู
 function showPage(page, button){
     document.querySelectorAll(".page").forEach(el => el.classList.remove("active"));
     document.getElementById(page).classList.add("active");
@@ -373,3 +296,6 @@ function showPage(page, button){
     document.getElementById("pageTitle").textContent = titles[page];
 }
 </script>
+
+</body>
+</html>
