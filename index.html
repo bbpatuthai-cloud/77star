@@ -64,7 +64,14 @@ button,input,select,textarea{font:inherit}button{cursor:pointer;border:0;border-
 
 <div id="modal" class="modal hidden"><div class="modalBox" id="modalBox"></div></div>
 
-<script src="config.js"></script>
+<!-- นำ Config มารวมไว้ในไฟล์นี้โดยตรง -->
+<script>
+window.SUPABASE_CONFIG = {
+  url: "https://vehsmnstxrdzcrsrsgzr.supabase.co",
+  publishableKey: "sb_publishable_1ddU0deXdUTJCOOz6F52Ug_3xYtUNhP"
+};
+</script>
+
 <script>
 let sb=null, role=null, tables=[], menus=[], orders=[], currentOrder={table_id:null,items:[]};
 const statuses=['ยังไม่ชำระเงิน','ชำระเงินแล้ว','รออาหาร','เสิร์ฟแล้ว','จบงาน'];
@@ -72,7 +79,6 @@ const cfg=window.SUPABASE_CONFIG||{};
 
 if(cfg.url && cfg.publishableKey && window.supabase)
   sb=supabase.createClient(cfg.url,cfg.publishableKey);
-
 
 // ===============================
 // REALTIME - อัปเดตข้อมูลทันที
@@ -119,9 +125,6 @@ if (sb) {
       console.log('Realtime status:', status);
     });
 }
-
-
-function enterRole(r){
 
 function enterRole(r){role=r; document.getElementById('rolePage').classList.add('hidden'); document.getElementById(r==='staff'?'staffPage':'managerPage').classList.remove('hidden'); document.getElementById('homeBtn').classList.remove('hidden'); document.getElementById('modeText').textContent=r==='staff'?'โหมดพนักงาน':'โหมดผู้จัดการ'; refreshAll();}
 document.getElementById('homeBtn').onclick=()=>{role=null;document.getElementById('rolePage').classList.remove('hidden');document.getElementById('staffPage').classList.add('hidden');document.getElementById('managerPage').classList.add('hidden');document.getElementById('homeBtn').classList.add('hidden');document.getElementById('modeText').textContent='เลือกหมวดหมู่'};
