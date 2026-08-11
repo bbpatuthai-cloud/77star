@@ -1,0 +1,94 @@
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+<script>
+// 1. ก๊อปปี้ firebaseConfig จาก Firebase ของคุณมาวางทับตรงนี้เลยครับ
+const firebaseConfig = {
+  apiKey: "รหัสของคุณ",
+  authDomain: "รหัสของคุณ",
+  databaseURL: "https://star-abfc3-default-rtdb.firebaseio.com", // URL จากรูปของคุณ
+  projectId: "รหัสของคุณ",
+  storageBucket: "รหัสของคุณ",
+  messagingSenderId: "รหัสของคุณ",
+  appId: "รหัสของคุณ"
+};
+
+// 2. เริ่มต้นการเชื่อมต่อ Firebase
+firebase.initializeApp(firebaseConfig);
+const database = firebase.database();
+const productsRef = database.ref('storeData/products');
+
+// กำหนดตัวแปรสกุลเงิน
+let currentCurrency = "THB";
+
+// 3. ฟังก์ชันดึงข้อมูลแบบ Realtime (ข้อมูลจะเปลี่ยนทันทีที่มีคนแก้)
+productsRef.on('value', (snapshot) => {
+    const data = snapshot.val();
+    const list = document.getElementById("productList");
+    list.innerHTML = "";
+    
+    let productCount = 0;
+    let currencySymbol = currentCurrency === "THB" ? "฿" : "$";
+
+    if (data) {
+        // วนลูปสร้างรายการสินค้า
+        Object.keys(data).forEach(key => {
+            productCount++;
+            const product = data[key];
+            list.innerHTML += `
+                <div class="product">
+                    <button class="delete-btn" onclick="deleteProduct('${key}')">ลบ</button>
+                    <h3>${product.name}</h3>
+                    <div class="price">${currencySymbol}${Number(product.price).toLocaleString()}</div>
+                    <p><span class="badge success">มีสินค้า</span></p>
+                </div>
+            `;
+        });
+    } else {
+        list.innerHTML = `<div class="empty" style="grid-column: 1 / -1;">ยังไม่มีสินค้า กดเพิ่มสินค้าด้านบนได้เลย</div>`;
+    }
+
+    // อัปเดตจำนวนสินค้าหน้า Dashboard
+    document.getElementById('dashboardProductCount').innerText = productCount;
+});
+
+// 4. ฟังก์ชันเพิ่มสินค้า (ส่งข้อมูลขึ้น Firebase)
+function addProduct() {
+    const name = document.getElementById("productName").value.trim();
+    const price = document.getElementById("productPrice").value;
+
+    if(!name || !price) {
+        alert("กรุณากรอกชื่อสินค้าและราคา");
+        return;
+    }
+
+    // สั่ง push ข้อมูลขึ้น Database
+    productsRef.push({ name: name, price: price });
+    
+    // ล้างค่าฟอร์ม
+    document.getElementById("productName").value = "";
+    document.getElementById("productPrice").value = "";
+}
+
+// 5. ฟังก์ชันลบสินค้า
+function deleteProduct(id) {
+    if(confirm("ต้องการลบสินค้านี้ใช่หรือไม่?")) {
+        database.ref('storeData/products/' + id).remove();
+    }
+}
+
+// ฟังก์ชันสลับเมนู (โค้ดเดิมของคุณ)
+function showPage(page, button){
+    document.querySelectorAll(".page").forEach(el => el.classList.remove("active"));
+    document.getElementById(page).classList.add("active");
+    
+    document.querySelectorAll(".menu button").forEach(el => el.classList.remove("active"));
+    button.classList.add("active");
+
+    const titles = {
+        dashboard:"Dashboard", products:"จัดการสินค้า", orders:"ออเดอร์",
+        sales:"ยอดขาย", customers:"ลูกค้า", settings:"ตั้งค่า"
+    };
+    document.getElementById("pageTitle").textContent = titles[page];
+}
+</script>
