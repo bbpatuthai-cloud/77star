@@ -1,301 +1,185 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ระบบจัดการร้าน</title>
-
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>77 STAR</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-/* CSS เหมือนเดิมทั้งหมด */
-*{box-sizing:border-box}
-body{ margin:0; font-family:Arial,"Tahoma",sans-serif; background:#0b0910; color:#fff; }
-.sidebar{ position:fixed; left:0; top:0; bottom:0; width:240px; background:#15101b; border-right:1px solid #382540; padding:25px 15px; }
-.logo{ font-size:27px; font-weight:bold; color:#e9a1ff; padding:0 15px 30px; word-break: break-all; line-height: 1.2; }
-.logo span{ color:#fff; }
-.menu{ display:flex; flex-direction:column; gap:8px; }
-.menu button{ border:0; background:transparent; color:#b9afc0; padding:14px 16px; text-align:left; border-radius:10px; font-size:15px; cursor:pointer; }
-.menu button:hover, .menu button.active{ background:#33203c; color:#fff; }
-.main{ margin-left:240px; padding:30px; }
-.topbar{ display:flex; justify-content:space-between; align-items:center; margin-bottom:30px; }
-.topbar h1{ margin:0; font-size:28px; }
-.status{ background:#16251b; color:#7dffab; border:1px solid #295c3b; padding:9px 15px; border-radius:20px; font-size:13px; }
-.page{ display:none; }
-.page.active{ display:block; }
-.cards{ display:grid; grid-template-columns:repeat(4,1fr); gap:18px; }
-.card{ background:#15101b; border:1px solid #382540; border-radius:15px; padding:22px; }
-.card .icon{ font-size:25px; }
-.card .label{ color:#aaa0ae; margin-top:12px; font-size:14px; }
-.card .value{ font-size:28px; font-weight:bold; margin-top:7px; color:#e9a1ff; }
-.section{ margin-top:25px; }
-.section-title{ font-size:20px; font-weight:bold; margin-bottom:15px; }
-.panel{ background:#15101b; border:1px solid #382540; border-radius:15px; padding:20px; }
-table{ width:100%; border-collapse:collapse; }
-th,td{ padding:15px 10px; text-align:left; border-bottom:1px solid #302335; }
-th{ color:#bcaec0; font-size:13px; }
-td{ color:#eee; }
-.badge{ display:inline-block; padding:5px 10px; border-radius:15px; font-size:12px; }
-.success{ background:#183a27; color:#7dffab; }
-.warning{ background:#40351b; color:#ffd86b; }
-.primary{ background:#3b2047; color:#e9a1ff; }
-button.action{ background:#d98aff; border:0; color:#170d1b; padding:10px 16px; border-radius:8px; cursor:pointer; font-weight:bold; }
-button.action:hover{ opacity:.85; }
-.form-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:15px; }
-input,select{ width:100%; padding:12px; background:#0e0b12; border:1px solid #46324d; border-radius:8px; color:#fff; outline:none; }
-input:focus,select:focus{ border-color:#d98aff; }
-.form-group label{ display:block; margin-bottom:7px; color:#bbb0c0; font-size:13px; }
-.products{ display:grid; grid-template-columns:repeat(3,1fr); gap:18px; }
-.product{ background:#15101b; border:1px solid #382540; border-radius:15px; padding:20px; position: relative; }
-.product h3{ margin-top:0; color:#e9a1ff; }
-.price{ font-size:22px; font-weight:bold; }
-.empty{ text-align:center; color:#8d8292; padding:30px; }
-.delete-btn { position: absolute; top: 15px; right: 15px; background: #ff4d4d; color: white; border: none; border-radius: 5px; padding: 5px 10px; cursor: pointer; font-size: 12px;}
-.delete-btn:hover { background: #ff1a1a; }
-
-@media(max-width:900px){
-    .sidebar{ width:190px; }
-    .main{ margin-left:190px; }
-    .cards{ grid-template-columns:repeat(2,1fr); }
-    .products{ grid-template-columns:repeat(2,1fr); }
-}
-@media(max-width:650px){
-    .sidebar{ position:static; width:100%; height:auto; }
-    .main{ margin-left:0; padding:15px; }
-    .cards, .products, .form-grid{ grid-template-columns:1fr; }
-}
+:root{--bg:#0d0a10;--card:#17111c;--card2:#211626;--line:#4b3650;--pink:#d77cf5;--text:#fff;--muted:#bbaec1;--ok:#79e2a7;--danger:#ff7d91}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,sans-serif}
+button,input,select,textarea{font:inherit}button{cursor:pointer;border:0;border-radius:10px;padding:11px 15px;font-weight:700}
+.top{height:70px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 28px;background:#110c15;position:sticky;top:0;z-index:10}
+.logo{font-size:28px;font-weight:900;color:var(--pink)}.top small{color:var(--muted)}
+.wrap{max-width:1250px;margin:28px auto;padding:0 18px}.hidden{display:none!important}
+.roleGrid{max-width:800px;margin:90px auto;display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.role{background:var(--card);border:1px solid var(--line);padding:40px 25px;text-align:center;border-radius:20px}.role h2{font-size:28px}.role p{color:var(--muted);min-height:48px}.role button{width:100%;background:var(--pink);color:#160c1c;font-size:18px}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px}.btn{background:var(--card2);color:#fff;border:1px solid var(--line)}.primary{background:var(--pink);color:#160c1c}.danger{background:#4b1824;color:#fff}.success{background:#173d2b;color:var(--ok)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:15px}.card{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:18px}.card h3{margin:0 0 8px}.muted{color:var(--muted)}.price{font-size:20px;color:var(--pink);font-weight:800}
+.tableCard{position:relative}.status{display:inline-block;padding:5px 9px;border-radius:20px;background:#302438;font-size:12px}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.menuItem{display:flex;justify-content:space-between;gap:10px;align-items:center;border-bottom:1px solid #322638;padding:11px 0}.menuItem:last-child{border:0}
+.orderPanel{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:18px;margin-top:20px}.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.field{margin:9px 0}.field label{display:block;color:var(--muted);margin-bottom:5px}.field input,.field select,.field textarea{width:100%;background:#0c0910;color:#fff;border:1px solid var(--line);padding:10px;border-radius:9px}.field textarea{min-height:70px}
+.cols{display:grid;grid-template-columns:1.1fr .9fr;gap:18px}.total{font-size:28px;color:var(--pink);font-weight:900}.empty{padding:30px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:12px}
+.modal{position:fixed;inset:0;background:#000b;display:flex;align-items:center;justify-content:center;padding:20px;z-index:50}.modalBox{width:min(550px,100%);background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px}
+@media(max-width:800px){.roleGrid,.cols{grid-template-columns:1fr}.top{padding:0 14px}.logo{font-size:22px}}
 </style>
 </head>
-
 <body>
+<header class="top">
+  <div class="logo">★ 77 STAR</div>
+  <div><small id="modeText">เลือกหมวดหมู่</small> <button id="homeBtn" class="btn hidden">หน้าหลัก</button></div>
+</header>
 
-<aside class="sidebar">
-    <div class="logo" id="displayStoreName">★ <span>77</span> STAR</div>
-    <div class="menu">
-        <button class="active" onclick="showPage('dashboard',this)">📊 Dashboard</button>
-        <button onclick="showPage('products',this)">📦 สินค้า</button>
-        <button onclick="showPage('orders',this)">🧾 ออเดอร์</button>
-        <button onclick="showPage('sales',this)">💰 ยอดขาย</button>
-        <button onclick="showPage('customers',this)">👥 ลูกค้า</button>
-        <button onclick="showPage('settings',this)">⚙️ ตั้งค่า</button>
-    </div>
-</aside>
-
-<main class="main">
-<div class="topbar">
-    <h1 id="pageTitle">Dashboard</h1>
-    <div class="status">● ระบบออนไลน์</div>
-</div>
-
-<!-- DASHBOARD -->
-<section id="dashboard" class="page active">
-    <div class="cards">
-        <div class="card"><div class="icon">💰</div><div class="label">ยอดขายวันนี้</div><div class="value">฿0</div></div>
-        <div class="card"><div class="icon">🧾</div><div class="label">ออเดอร์วันนี้</div><div class="value">0</div></div>
-        <div class="card"><div class="icon">📦</div><div class="label">สินค้าทั้งหมด</div><div class="value" id="dashboardProductCount">0</div></div>
-        <div class="card"><div class="icon">👥</div><div class="label">ลูกค้าทั้งหมด</div><div class="value">0</div></div>
-    </div>
-    <div class="section">
-        <div class="section-title">ออเดอร์ล่าสุด</div>
-        <div class="panel">
-            <div class="empty">ยังไม่มีออเดอร์</div>
-        </div>
-    </div>
+<main class="wrap">
+<section id="rolePage">
+  <div class="roleGrid">
+    <div class="role"><div style="font-size:55px">👨‍🍳</div><h2>พนักงาน</h2><p>รับออเดอร์ เลือกโต๊ะ เลือกเมนู คำนวณยอด และอัปเดตสถานะ</p><button onclick="enterRole('staff')">เข้าหน้าพนักงาน</button></div>
+    <div class="role"><div style="font-size:55px">👑</div><h2>ผู้จัดการ</h2><p>จัดการโต๊ะ เมนู ราคา ออเดอร์ และดูข้อมูลทั้งหมด</p><button onclick="enterRole('manager')">เข้าหน้าผู้จัดการ</button></div>
+  </div>
 </section>
 
-<!-- PRODUCTS -->
-<section id="products" class="page">
-    <div class="section">
-        <div class="section-title">จัดการสินค้า</div>
-        <div class="panel">
-            <div class="form-grid">
-                <div class="form-group">
-                    <label>ชื่อสินค้า</label>
-                    <input id="productName" placeholder="เช่น เสื้อยืดสีดำ">
-                </div>
-                <div class="form-group">
-                    <label>ราคา</label>
-                    <input id="productPrice" type="number" placeholder="399">
-                </div>
-            </div>
-            <br>
-            <button class="action" onclick="addProduct()">+ เพิ่มสินค้า</button>
-        </div>
-    </div>
-    <div class="section">
-        <div class="products" id="productList">
-            <!-- ข้อมูลจะถูกดึงจาก Firebase แบบ Realtime มาแสดงที่นี่ -->
-            <div class="empty" style="grid-column: 1 / -1;">กำลังโหลดข้อมูล...</div>
-        </div>
-    </div>
+<section id="staffPage" class="hidden">
+  <div class="toolbar">
+    <button class="btn" onclick="refreshAll()">↻ อัปเดตข้อมูล</button>
+    <button class="btn" onclick="openOrder()">＋ รับออเดอร์ใหม่</button>
+  </div>
+  <h2>👨‍🍳 รับออเดอร์</h2>
+  <div id="staffTables" class="grid"></div>
+  <div id="staffOrder" class="orderPanel hidden"></div>
 </section>
 
-<!-- หน้าอื่นๆ -->
-<section id="orders" class="page"><div class="section"><div class="panel"><div class="empty">ระบบอยู่ระหว่างการพัฒนา</div></div></div></section>
-<section id="sales" class="page"><div class="section"><div class="panel"><div class="empty">ระบบอยู่ระหว่างการพัฒนา</div></div></div></section>
-<section id="customers" class="page"><div class="section"><div class="panel"><div class="empty">ระบบอยู่ระหว่างการพัฒนา</div></div></div></section>
-
-<!-- SETTINGS -->
-<section id="settings" class="page">
-    <div class="section">
-        <div class="section-title">ตั้งค่าร้าน</div>
-        <div class="panel">
-            <div class="form-grid">
-                <div class="form-group">
-                    <label>ชื่อร้าน (อัปเดตโลโก้ทันที)</label>
-                    <input id="settingStoreName" value="77 STAR">
-                </div>
-                <div class="form-group">
-                    <label>สกุลเงิน</label>
-                    <select id="settingCurrency">
-                        <option value="THB">THB - บาท</option>
-                        <option value="USD">USD - ดอลลาร์</option>
-                    </select>
-                </div>
-            </div>
-            <br>
-            <button class="action" onclick="saveSettings()">บันทึกการตั้งค่า</button>
-        </div>
-    </div>
+<section id="managerPage" class="hidden">
+  <div class="toolbar">
+    <button class="btn" onclick="refreshAll()">↻ อัปเดตข้อมูล</button>
+    <button class="primary" onclick="openTableModal()">＋ เพิ่มโต๊ะ</button>
+    <button class="primary" onclick="openMenuModal()">＋ เพิ่มเมนู</button>
+  </div>
+  <h2>👑 ผู้จัดการ</h2>
+  <div class="cols">
+    <div><h3>โต๊ะและออเดอร์ทั้งหมด</h3><div id="managerTables" class="grid"></div></div>
+    <div><h3>เมนูอาหาร</h3><div id="managerMenus" class="card"></div></div>
+  </div>
 </section>
-
 </main>
 
-<!-- นำเข้า Firebase Scripts -->
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<div id="modal" class="modal hidden"><div class="modalBox" id="modalBox"></div></div>
 
+<script src="config.js"></script>
 <script>
-// 1. นำข้อมูลจาก Firebase Config ของคุณมาใส่ตรงนี้
-const firebaseConfig = {
-  apiKey: "รหัสของคุณ",
-  authDomain: "รหัสของคุณ",
-  databaseURL: "https://star-abfc3-default-rtdb.firebaseio.com",
-  projectId: "รหัสของคุณ",
-  storageBucket: "รหัสของคุณ",
-  messagingSenderId: "รหัสของคุณ",
-  appId: "รหัสของคุณ"
-};
+let sb=null, role=null, tables=[], menus=[], orders=[], currentOrder={table_id:null,items:[]};
+const statuses=['ยังไม่ชำระเงิน','ชำระเงินแล้ว','รออาหาร','เสิร์ฟแล้ว','จบงาน'];
+const cfg=window.SUPABASE_CONFIG||{};
 
-// 2. เริ่มต้นระบบ Firebase
-firebase.initializeApp(firebaseConfig);
-const database = firebase.database();
+if(cfg.url && cfg.publishableKey && window.supabase)
+  sb=supabase.createClient(cfg.url,cfg.publishableKey);
 
-// สร้างกล่องข้อมูลสำหรับเก็บ สินค้า และ การตั้งค่า
-const productsRef = database.ref('storeData/products');
-const settingsRef = database.ref('storeData/settings');
 
-// ตัวแปรส่วนกลาง
-let currentCurrency = "THB";
-let cachedProducts = null;
-
-// ==========================================
-// ระบบดึงข้อมูลตั้งค่า (Realtime Settings)
-// ==========================================
-settingsRef.on('value', (snapshot) => {
-    const data = snapshot.val() || { storeName: "77 STAR", currency: "THB" };
-    
-    currentCurrency = data.currency;
-    
-    // อัปเดตหน้าตาเว็บทันทีที่มีการตั้งค่าใหม่
-    document.getElementById('settingStoreName').value = data.storeName;
-    document.getElementById('settingCurrency').value = data.currency;
-    document.getElementById('displayStoreName').innerHTML = `★ <span>${data.storeName}</span>`;
-    document.title = data.storeName + " - ระบบจัดการร้าน";
-
-    // สั่งให้วาดรายการสินค้าใหม่เพื่อให้สกุลเงินเปลี่ยนตาม
-    if (cachedProducts !== null) renderProducts(cachedProducts);
-});
-
-// ==========================================
-// ระบบดึงข้อมูลสินค้า (Realtime Products)
-// ==========================================
-productsRef.on('value', (snapshot) => {
-    cachedProducts = snapshot.val();
-    renderProducts(cachedProducts);
-});
-
-function renderProducts(data) {
-    const list = document.getElementById("productList");
-    list.innerHTML = "";
-    
-    let productCount = 0;
-    let currencySymbol = currentCurrency === "THB" ? "฿" : "$";
-
-    if (data) {
-        Object.keys(data).forEach(key => {
-            productCount++;
-            const product = data[key];
-            list.innerHTML += `
-                <div class="product">
-                    <button class="delete-btn" onclick="deleteProduct('${key}')">ลบ</button>
-                    <h3>${product.name}</h3>
-                    <div class="price">${currencySymbol}${Number(product.price).toLocaleString()}</div>
-                    <p><span class="badge success">มีสินค้า</span></p>
-                </div>
-            `;
-        });
-    } else {
-        list.innerHTML = `<div class="empty" style="grid-column: 1 / -1;">ยังไม่มีสินค้า กดเพิ่มสินค้าด้านบนได้เลย</div>`;
-    }
-
-    document.getElementById('dashboardProductCount').innerText = productCount;
-}
-
-// ==========================================
-// ระบบปุ่มทำงานต่างๆ (เชื่อมกับ Firebase)
-// ==========================================
-
-// ฟังก์ชันเพิ่มสินค้า
-function addProduct() {
-    const name = document.getElementById("productName").value.trim();
-    const price = document.getElementById("productPrice").value;
-
-    if(!name || !price) {
-        alert("กรุณากรอกชื่อสินค้าและราคา");
-        return;
-    }
-
-    productsRef.push({ name: name, price: price });
-    
-    document.getElementById("productName").value = "";
-    document.getElementById("productPrice").value = "";
-}
-
-// ฟังก์ชันลบสินค้า
-function deleteProduct(id) {
-    if(confirm("ต้องการลบสินค้านี้ใช่หรือไม่?")) {
-        database.ref('storeData/products/' + id).remove();
-    }
-}
-
-// ฟังก์ชันบันทึกการตั้งค่า
-function saveSettings() {
-    const newName = document.getElementById('settingStoreName').value;
-    const newCurrency = document.getElementById('settingCurrency').value;
-
-    // บันทึกขึ้น Firebase ตรงๆ (เครื่องอื่นจะเปลี่ยนตามทันที)
-    settingsRef.set({
-        storeName: newName,
-        currency: newCurrency
-    }).then(() => {
-        alert("อัปเดตการตั้งค่าเข้าระบบออนไลน์แล้ว!");
+// ===============================
+// REALTIME - อัปเดตข้อมูลทันที
+// ===============================
+if (sb) {
+  sb.channel('77-star-realtime')
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'tables'
+      },
+      () => {
+        console.log('Realtime: tables updated');
+        refreshAll();
+      }
+    )
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'menus'
+      },
+      () => {
+        console.log('Realtime: menus updated');
+        refreshAll();
+      }
+    )
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'orders'
+      },
+      () => {
+        console.log('Realtime: orders updated');
+        refreshAll();
+      }
+    )
+    .subscribe((status) => {
+      console.log('Realtime status:', status);
     });
 }
 
-// ฟังก์ชันสลับเมนู
-function showPage(page, button){
-    document.querySelectorAll(".page").forEach(el => el.classList.remove("active"));
-    document.getElementById(page).classList.add("active");
-    
-    document.querySelectorAll(".menu button").forEach(el => el.classList.remove("active"));
-    button.classList.add("active");
 
-    const titles = {
-        dashboard:"Dashboard", products:"จัดการสินค้า", orders:"ออเดอร์",
-        sales:"ยอดขาย", customers:"ลูกค้า", settings:"ตั้งค่า"
-    };
-    document.getElementById("pageTitle").textContent = titles[page];
+function enterRole(r){
+
+function enterRole(r){role=r; document.getElementById('rolePage').classList.add('hidden'); document.getElementById(r==='staff'?'staffPage':'managerPage').classList.remove('hidden'); document.getElementById('homeBtn').classList.remove('hidden'); document.getElementById('modeText').textContent=r==='staff'?'โหมดพนักงาน':'โหมดผู้จัดการ'; refreshAll();}
+document.getElementById('homeBtn').onclick=()=>{role=null;document.getElementById('rolePage').classList.remove('hidden');document.getElementById('staffPage').classList.add('hidden');document.getElementById('managerPage').classList.add('hidden');document.getElementById('homeBtn').classList.add('hidden');document.getElementById('modeText').textContent='เลือกหมวดหมู่'};
+
+async function dbGet(table){if(!sb)return JSON.parse(localStorage.getItem('77_'+table)||'[]');let {data,error}=await sb.from(table).select('*').order('id');if(error){console.error(error);return []}return data||[]}
+async function dbInsert(table,row){if(!sb){let a=await dbGet(table);row.id=Date.now();a.push(row);localStorage.setItem('77_'+table,JSON.stringify(a));return row}let {data,error}=await sb.from(table).insert(row).select().single();if(error){alert(error.message);return null}return data}
+async function dbUpdate(table,id,row){if(!sb){let a=await dbGet(table);a=a.map(x=>x.id===id?{...x,...row}:x);localStorage.setItem('77_'+table,JSON.stringify(a));return true}let {error}=await sb.from(table).update(row).eq('id',id);if(error){alert(error.message);return false}return true}
+async function dbDelete(table,id){if(!sb){let a=await dbGet(table);a=a.filter(x=>x.id!==id);localStorage.setItem('77_'+table,JSON.stringify(a));return true}let {error}=await sb.from(table).delete().eq('id',id);if(error){alert(error.message);return false}return true}
+
+async function refreshAll(){
+ tables=await dbGet('tables'); menus=await dbGet('menus'); orders=await dbGet('orders');
+ renderStaff();renderManager();
 }
-</script>
+function statusClass(s){return `<span class="status">${s}</span>`}
+function tableName(id){return (tables.find(t=>t.id===id)||{}).name||'โต๊ะ '+id}
 
+function renderStaff(){
+ const el=document.getElementById('staffTables'); if(!el)return;
+ if(!tables.length){el.innerHTML='<div class="empty">ยังไม่มีโต๊ะ ให้ผู้จัดการเพิ่มโต๊ะก่อน</div>';return}
+ el.innerHTML=tables.map(t=>{
+   const o=orders.find(x=>x.table_id===t.id && x.status!=='จบงาน');
+   return `<div class="card tableCard"><h3>${esc(t.name)}</h3>${o?statusClass(o.status):'<span class="status">ว่าง</span>'}<div class="muted" style="margin-top:8px">${o?'ยอด '+money(o.total):'ยังไม่มีออเดอร์'}</div><div class="actions"><button class="primary" onclick="startTable(${t.id})">${o?'แก้ไขออเดอร์':'รับออเดอร์'}</button>${o?`<button class="btn" onclick="changeStatus(${o.id})">เปลี่ยนสถานะ</button>`:''}</div></div>`
+ }).join('');
+}
+function renderManager(){
+ const te=document.getElementById('managerTables'), me=document.getElementById('managerMenus'); if(!te)return;
+ te.innerHTML=tables.length?tables.map(t=>{let o=orders.find(x=>x.table_id===t.id&&x.status!=='จบงาน');return `<div class="card"><h3>${esc(t.name)}</h3>${o?`<div>${statusClass(o.status)}<br><b>${money(o.total)}</b></div><div class="actions"><button class="btn" onclick="changeStatus(${o.id})">สถานะ</button><button class="danger" onclick="deleteOrder(${o.id})">ลบออเดอร์</button></div>`:'<div class="muted">ว่าง</div>'}<div class="actions"><button class="btn" onclick="renameTable(${t.id})">แก้ชื่อ</button><button class="danger" onclick="deleteTable(${t.id})">ลบโต๊ะ</button></div></div>`}).join(''):'<div class="empty">ยังไม่มีโต๊ะ</div>';
+ me.innerHTML=menus.length?menus.map(m=>`<div class="menuItem"><div><b>${esc(m.name)}</b><div class="muted">${esc(m.description||'')}</div></div><div class="row"><span class="price">${money(m.price)}</span><button class="btn" onclick="editMenu(${m.id})">แก้</button><button class="danger" onclick="deleteMenu(${m.id})">ลบ</button></div></div>`).join(''):'<div class="empty">ยังไม่มีเมนู</div>';
+}
+
+function startTable(id){currentOrder={table_id:id,items:[]};let old=orders.find(x=>x.table_id===id&&x.status!=='จบงาน');if(old)try{currentOrder.items=JSON.parse(old.items||'[]')}catch{};renderOrder();document.getElementById('staffOrder').scrollIntoView({behavior:'smooth'})}
+function openOrder(){if(!tables.length){alert('ยังไม่มีโต๊ะ');return}startTable(tables[0].id)}
+function renderOrder(){
+ const p=document.getElementById('staffOrder');p.classList.remove('hidden');
+ p.innerHTML=`<h3>ออเดอร์ — ${tableName(currentOrder.table_id)}</h3><div class="grid">${menus.map(m=>`<div class="card"><b>${esc(m.name)}</b><div class="price">${money(m.price)}</div><button class="primary" onclick="addItem(${m.id})">＋ เพิ่ม</button></div>`).join('')}</div><div style="margin-top:20px"><h3>รายการ</h3>${currentOrder.items.length?currentOrder.items.map((it,i)=>`<div class="menuItem"><div>${esc(it.name)} × ${it.qty}</div><div class="row"><b>${money(it.price*it.qty)}</b><button class="btn" onclick="qty(${i},-1)">−</button><button class="btn" onclick="qty(${i},1)">＋</button></div></div>`).join(''):'<div class="empty">ยังไม่มีรายการ</div>'}</div><div class="row" style="justify-content:space-between;margin-top:18px"><div class="total">${money(total())}</div><div class="row"><button class="btn" onclick="document.getElementById('staffOrder').classList.add('hidden')">ปิด</button><button class="primary" onclick="saveOrder()">บันทึกออเดอร์</button></div></div>`;
+}
+function addItem(id){let m=menus.find(x=>x.id===id),it=currentOrder.items.find(x=>x.menu_id===id);if(it)it.qty++;else currentOrder.items.push({menu_id:id,name:m.name,price:Number(m.price),qty:1});renderOrder()}
+function qty(i,d){currentOrder.items[i].qty+=d;if(currentOrder.items[i].qty<=0)currentOrder.items.splice(i,1);renderOrder()}
+function total(){return currentOrder.items.reduce((s,x)=>s+x.price*x.qty,0)}
+async function saveOrder(){if(!currentOrder.items.length){alert('กรุณาเลือกเมนูก่อน');return}let old=orders.find(x=>x.table_id===currentOrder.table_id&&x.status!=='จบงาน');let row={table_id:currentOrder.table_id,items:JSON.stringify(currentOrder.items),total:total(),status:old?old.status:'รออาหาร'};if(old)await dbUpdate('orders',old.id,row);else await dbInsert('orders',row);alert('บันทึกออเดอร์แล้ว');await refreshAll();document.getElementById('staffOrder').classList.add('hidden')}
+
+async function changeStatus(id){let o=orders.find(x=>x.id===id);let html=`<h3>เปลี่ยนสถานะ — ${tableName(o.table_id)}</h3><div class="field"><select id="newStatus">${statuses.map(s=>`<option ${s===o.status?'selected':''}>${s}</option>`).join('')}</select></div><div class="actions"><button class="btn" onclick="closeModal()">ยกเลิก</button><button class="primary" onclick="saveStatus(${id})">บันทึก</button></div>`;showModal(html)}
+async function saveStatus(id){await dbUpdate('orders',id,{status:document.getElementById('newStatus').value});closeModal();refreshAll()}
+async function deleteOrder(id){if(confirm('ลบออเดอร์นี้ใช่หรือไม่?')){await dbDelete('orders',id);refreshAll()}}
+async function openTableModal(){showModal(`<h3>เพิ่มโต๊ะ</h3><div class="field"><label>ชื่อโต๊ะ</label><input id="tableName" placeholder="เช่น โต๊ะ 1"></div><div class="actions"><button class="btn" onclick="closeModal()">ยกเลิก</button><button class="primary" onclick="addTable()">เพิ่ม</button></div>`)}
+async function addTable(){let n=document.getElementById('tableName').value.trim();if(!n)return;await dbInsert('tables',{name:n});closeModal();refreshAll()}
+async function renameTable(id){let t=tables.find(x=>x.id===id);showModal(`<h3>แก้ชื่อโต๊ะ</h3><div class="field"><input id="tableName" value="${esc(t.name)}"></div><div class="actions"><button class="btn" onclick="closeModal()">ยกเลิก</button><button class="primary" onclick="saveTable(${id})">บันทึก</button></div>`)}
+async function saveTable(id){await dbUpdate('tables',id,{name:document.getElementById('tableName').value.trim()});closeModal();refreshAll()}
+async function deleteTable(id){if(orders.some(o=>o.table_id===id)){alert('โต๊ะนี้มีออเดอร์อยู่ ลบออเดอร์ก่อน');return}if(confirm('ลบโต๊ะนี้ใช่หรือไม่?')){await dbDelete('tables',id);refreshAll()}}
+async function openMenuModal(m=null){showModal(`<h3>${m?'แก้ไข':'เพิ่ม'}เมนู</h3><div class="field"><label>ชื่อเมนู</label><input id="menuName" value="${m?esc(m.name):''}"></div><div class="field"><label>ราคา</label><input id="menuPrice" type="number" step="0.01" value="${m?m.price:''}"></div><div class="field"><label>รายละเอียด</label><textarea id="menuDesc">${m?esc(m.description||''):''}</textarea></div><div class="actions"><button class="btn" onclick="closeModal()">ยกเลิก</button><button class="primary" onclick="${m?`saveMenu(${m.id})`:'addMenu()'}">บันทึก</button></div>`)}
+function editMenu(id){openMenuModal(menus.find(x=>x.id===id))}
+async function addMenu(){let n=document.getElementById('menuName').value.trim(),p=Number(document.getElementById('menuPrice').value),d=document.getElementById('menuDesc').value.trim();if(!n||!p)return alert('กรอกชื่อและราคา');await dbInsert('menus',{name:n,price:p,description:d});closeModal();refreshAll()}
+async function saveMenu(id){let n=document.getElementById('menuName').value.trim(),p=Number(document.getElementById('menuPrice').value),d=document.getElementById('menuDesc').value.trim();await dbUpdate('menus',id,{name:n,price:p,description:d});closeModal();refreshAll()}
+async function deleteMenu(id){if(confirm('ลบเมนูนี้ใช่หรือไม่?')){await dbDelete('menus',id);refreshAll()}}
+function showModal(h){document.getElementById('modalBox').innerHTML=h;document.getElementById('modal').classList.remove('hidden')}
+function closeModal(){document.getElementById('modal').classList.add('hidden')}
+function money(n){return Number(n||0).toLocaleString('th-TH',{minimumFractionDigits:2})+' ฿'}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+</script>
 </body>
 </html>
