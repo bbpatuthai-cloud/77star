@@ -69,6 +69,28 @@ button,input,select,textarea{font:inherit}button{cursor:pointer;border:0;border-
     </div>
   </div>
 
+  <!-- ส่วนแสดงสรุปยอดขายย้อนหลังรายวัน -->
+  <div style="margin-bottom:25px">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
+      <h3 style="margin:0">📅 สรุปยอดขายย้อนหลังรายวัน</h3>
+      <button class="btn" onclick="renderDailySummary()">↻ รีเฟรชยอดขาย</button>
+    </div>
+    <div class="card" style="overflow-x:auto">
+      <table style="width:100%; text-align:left; border-collapse:collapse;" id="dailySalesTable">
+        <thead>
+          <tr style="border-bottom:1px solid var(--line); color:var(--muted)">
+            <th style="padding:10px">วันที่</th>
+            <th style="padding:10px">จำนวนออเดอร์</th>
+            <th style="padding:10px">ยอดขายรวม</th>
+          </tr>
+        </thead>
+        <tbody id="dailySalesList">
+          <!-- ข้อมูลยอดขายย้อนหลังจะแสดงที่นี่ -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
   <h2>👑 ผู้จัดการ</h2>
   <div class="cols">
     <div><h3>โต๊ะและออเดอร์ทั้งหมด</h3><div id="managerTables" class="grid"></div></div>
@@ -127,8 +149,8 @@ async function dbUpdate(table,id,row){if(!sb){let a=await dbGet(table);a=a.map(x
 async function dbDelete(table,id){if(!sb){let a=await dbGet(table);a=a.filter(x=>x.id!==id);localStorage.setItem('77_'+table,JSON.stringify(a));return true}let {error}=await sb.from(table).delete().eq('id',id);if(error){alert(error.message);return false}return true}
 
 async function refreshAll(){
- tables=await dbGet('tables'); menus=await dbGet('menus'); orders=await dbGet('orders');
- renderStaff();renderManager();calculateTodaySales();
+  tables=await dbGet('tables'); menus=await dbGet('menus'); orders=await dbGet('orders');
+  renderStaff();renderManager();calculateTodaySales();renderDailySummary();
 }
 
 // ฟังก์ชันคำนวณยอดขายประจำวัน
@@ -149,6 +171,53 @@ function calculateTodaySales(){
   
   if(salesEl) salesEl.textContent = money(totalSales);
   if(countEl) countEl.textContent = todayOrders.length + ' ออเดอร์';
+}
+
+// ฟังก์ชันคำนวณและแสดงผลประวัติยอดขายแยกตามวัน
+function renderDailySummary(){
+  const listEl = document.getElementById('dailySalesList');
+  if(!listEl) return;
+
+  // กรองเฉพาะออเดอร์ที่ชำระเงินแล้ว หรือจบงาน
+  const paidOrders = orders.filter(o => o.status === 'ชำระเงินแล้ว' || o.status === 'จบงาน');
+
+  if (!paidOrders.length) {
+    listEl.innerHTML = '<tr><td colspan="3" class="empty" style="border:none">ยังไม่มีประวัติการชำระเงิน</td></tr>';
+    return;
+  }
+
+  // จัดกลุ่มออเดอร์ตามวันที่
+  const salesByDate = {};
+
+  paidOrders.forEach(o => {
+    const dateObj = o.created_at ? new Date(o.created_at) : new Date();
+    const dateKey = dateObj.toLocaleDateString('th-TH', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+
+    if (!salesByDate[dateKey]) {
+      salesByDate[dateKey] = { count: 0, total: 0 };
+    }
+
+    salesByDate[dateKey].count += 1;
+    salesByDate[dateKey].total += Number(o.total || 0);
+  });
+
+  const rows = Object.keys(salesByDate).map(date => ({
+    date,
+    count: salesByDate[date].count,
+    total: salesByDate[date].total
+  }));
+
+  listEl.innerHTML = rows.map(r => `
+    <tr style="border-bottom:1px solid #281d2e">
+      <td style="padding:12px 10px; font-weight:bold">${esc(r.date)}</td>
+      <td style="padding:12px 10px">${r.count} ออเดอร์</td>
+      <td style="padding:12px 10px; color:var(--pink); font-weight:bold">${money(r.total)}</td>
+    </tr>
+  `).join('');
 }
 
 function statusClass(s){return `<span class="status">${s}</span>`}
