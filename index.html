@@ -219,6 +219,7 @@ window.SUPABASE_CONFIG = {
   url: "https://vehsmnstxrdzcrsrsgzr.supabase.co",
   publishableKey: "sb_publishable_1ddU0deXdUTJCOOz6F52Ug_3xYtUNhP"
 };
+const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1537113084160905357/MbjfEtSs2XrsycxJVVw3f3G5o54kgypBzs8FOu-zUIS-hrqT6SKmvbKW33Owdb1U6N_s";
 </script>
 
 <script>
@@ -238,10 +239,23 @@ if (sb) {
     .subscribe();
 }
 
+// ฟังก์ชันสำหรับส่งข้อมูลไปยัง Discord Webhook
+async function sendDiscordWebhook(embedData) {
+  if (!DISCORD_WEBHOOK_URL) return;
+  try {
+    await fetch(DISCORD_WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ embeds: [embedData] })
+    });
+  } catch(e) {
+    console.error("Discord Webhook Error:", e);
+  }
+}
+
 function parseMenuDesc(descText) {
   if (!descText) return { img: '', desc: '', cat: '', icon: '' };
   try {
-    // รองรับ JSON Description ของ Database ใหม่
     const parsed = JSON.parse(descText);
     let rawUrl = parsed.image || '';
     if (rawUrl.includes('discordapp.com/attachments/') || rawUrl.includes('discordapp.net/attachments/')) {
@@ -249,7 +263,6 @@ function parseMenuDesc(descText) {
     }
     return { img: rawUrl, desc: parsed.desc || '', cat: parsed.cat || '', icon: parsed.icon || '' };
   } catch(e) {
-    // Fallback หากข้อมูลเก่าไม่ได้เป็น JSON
     const match = descText.match(/\[IMG:(.*?)\]/);
     if (match) {
       let rawUrl = match[1];
@@ -384,7 +397,7 @@ async function refreshAll(){
   tables = await dbGet('uwu_tables'); 
   menus = await dbGet('uwu_menus'); 
   orders = await dbGet('uwu_orders');
-  staffList = await dbGet('uwu_staff'); // อัปเดตรายชื่อพนักงานจาก DB SQL
+  staffList = await dbGet('uwu_staff');
   
   await loadStaffList();
   renderStaff();
@@ -412,7 +425,6 @@ async function clockInOut(type){
 
   const now = new Date();
   
-  // สร้าง Log สำหรับคำนวณชั่วโมง (ใช้ตาราง uwu_orders แบบเดิมเพื่อไม่ให้สูตรเก่าพัง)
   const row = {
     table_id: null,
     items: JSON.stringify([{ staff_name: name, clock_type: type, timestamp: now.getTime() }]),
@@ -421,7 +433,6 @@ async function clockInOut(type){
   };
   const res = await dbInsert('uwu_orders', row);
   
-  // อัปเดตสถานะของพนักงานในตาราง uwu_staff ด้วย
   const staffMember = staffList.find(s => s.name === name);
   if (staffMember) {
     await dbUpdate('uwu_staff', staffMember.id, { 
@@ -432,6 +443,20 @@ async function clockInOut(type){
 
   if(res) {
     alert(`บันทึกเวลา "${type}" สำหรับ ${name} เรียบร้อยแล้ว`);
+    
+    // แจ้งเตือนเข้า Discord
+    sendDiscordWebhook({
+      title: type === 'เข้าเวร' ? '🟢 พนักงานเข้าเวร' : '🔴 พนักงานออกเวร',
+      color: type === 'เข้าเวร' ? 0x79e2a7 : 0xff7d91,
+      fields: [
+        { name: 'ชื่อพนักงาน', value: name, inline: true },
+        { name: 'สถานะ', value: type, inline: true },
+        { name: 'เวลา', value: now.toLocaleString('th-TH'), inline: false }
+      ],
+      footer: { text: '★ 77 STAR Attendance Notification' },
+      timestamp: new Date().toISOString()
+    });
+
     refreshAll();
   }
 }
@@ -613,7 +638,6 @@ function openStaffModal(){
 async function addStaff(){
   const name = document.getElementById('newStaffName').value.trim();
   if(!name) return;
-  // บันทึกลงใน uwu_staff
   await dbInsert('uwu_staff', {
     name: name,
     role: 'พนักงานเสิร์ฟ',
@@ -769,6 +793,20 @@ async function saveDailySettlement(){
   const res = await dbInsert('uwu_orders', row);
   if(res){
     alert('บันทึกปิดยอดขายประจำวันสำเร็จเรียบร้อยแล้ว!');
+
+    // แจ้งเตือนเข้า Discord
+    sendDiscordWebhook({
+      title: '📊 บันทึกปิดยอดขายประจำวัน (Daily Settlement)',
+      color: 0xd77cf5,
+      fields: [
+        { name: 'ประจำวันที่', value: dateStr, inline: true },
+        { name: 'จำนวนออเดอร์', value: `${todayOrders.length} ออเดอร์`, inline: true },
+        { name: 'ยอดขายรวมทั้งหมด', value: money(totalSales), inline: false }
+      ],
+      footer: { text: '★ 77 STAR Settlement System' },
+      timestamp: new Date().toISOString()
+    });
+
     refreshAll();
   }
 }
@@ -935,7 +973,35 @@ function renderOrder(){
 function addItem(id){let m=menus.find(x=>x.id===id),it=currentOrder.items.find(x=>x.menu_id===id);if(it)it.qty++;else currentOrder.items.push({menu_id:id,name:m.name,price:Number(m.price),qty:1});renderOrder()}
 function qty(i,d){currentOrder.items[i].qty+=d;if(currentOrder.items[i].qty<=0)currentOrder.items.splice(i,1);renderOrder()}
 function total(){return currentOrder.items.reduce((s,x)=>s+x.price*x.qty,0)}
-async function saveOrder(){if(!currentOrder.items.length){alert('กรุณาเลือกเมนูก่อน');return}let old=orders.find(x=>x.table_id===currentOrder.table_id&&x.status!=='จบงาน'&&x.status!=='CLOCK_LOG'&&x.status!=='STAFF_LIST'&&x.status!=='DAILY_SETTLEMENT'&&x.status!=='MANAGER_PWD');let row={table_id:currentOrder.table_id,items:JSON.stringify(currentOrder.items),total:total(),status:old?old.status:'รออาหาร'};if(old)await dbUpdate('uwu_orders',old.id,row);else await dbInsert('uwu_orders',row);alert('บันทึกออเดอร์แล้ว');await refreshAll();document.getElementById('staffOrder').classList.add('hidden')}
+async function saveOrder(){
+  if(!currentOrder.items.length){alert('กรุณาเลือกเมนูก่อน');return}
+  let old=orders.find(x=>x.table_id===currentOrder.table_id&&x.status!=='จบงาน'&&x.status!=='CLOCK_LOG'&&x.status!=='STAFF_LIST'&&x.status!=='DAILY_SETTLEMENT'&&x.status!=='MANAGER_PWD');
+  let row={table_id:currentOrder.table_id,items:JSON.stringify(currentOrder.items),total:total(),status:old?old.status:'รออาหาร'};
+  
+  if(old) await dbUpdate('uwu_orders',old.id,row);
+  else await dbInsert('uwu_orders',row);
+  
+  alert('บันทึกออเดอร์แล้ว');
+
+  // แจ้งเตือนออเดอร์ใหม่เข้า Discord
+  const tName = tableName(currentOrder.table_id);
+  const itemListText = currentOrder.items.map(it => `• ${it.name} x${it.qty} (${money(it.price * it.qty)})`).join('\n');
+  
+  sendDiscordWebhook({
+    title: `🧾 มีการสั่งซื้อใหม่ / อัปเดตออเดอร์ (${tName})`,
+    color: 0x3498db,
+    fields: [
+      { name: 'โต๊ะ', value: tName, inline: true },
+      { name: 'ราคารวม', value: money(total()), inline: true },
+      { name: 'รายการที่สั่ง', value: itemListText || 'ไม่มีรายการ', inline: false }
+    ],
+    footer: { text: '★ 77 STAR Order System' },
+    timestamp: new Date().toISOString()
+  });
+
+  await refreshAll();
+  document.getElementById('staffOrder').classList.add('hidden');
+}
 
 async function changeStatus(id){let o=orders.find(x=>x.id===id);let html=`<h3>เปลี่ยนสถานะ — ${tableName(o.table_id)}</h3><div class="field"><select id="newStatus">${statuses.map(s=>`<option ${s===o.status?'selected':''}>${s}</option>`).join('')}</select></div><div class="actions"><button class="btn" onclick="closeModal()">ยกเลิก</button><button class="primary" onclick="saveStatus(${id})">บันทึก</button></div>`;showModal(html)}
 async function saveStatus(id){await dbUpdate('uwu_orders',id,{status:document.getElementById('newStatus').value});closeModal();refreshAll()}
