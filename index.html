@@ -20,7 +20,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer;border:0;border-
 .menuItem{display:flex;justify-content:space-between;gap:10px;align-items:center;border-bottom:1px solid #322638;padding:11px 0}.menuItem:last-child{border:0}
 .orderPanel{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:18px;margin-top:20px}.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.field{margin:9px 0}.field label{display:block;color:var(--muted);margin-bottom:5px}.field input,.field select,.field textarea{width:100%;background:#0c0910;color:#fff;border:1px solid var(--line);padding:10px;border-radius:9px}.field textarea{min-height:70px}
 .cols{display:grid;grid-template-columns:1.1fr .9fr;gap:18px}.total{font-size:28px;color:var(--pink);font-weight:900}.empty{padding:30px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:12px}
-.modal{position:fixed;inset:0;background:#000b;display:flex;align-items:center;justify-content:center;padding:20px;z-index:50}.modalBox{width:min(550px,100%);background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px}
+.modal{position:fixed;inset:0;background:#000b;display:flex;align-items:center;justify-content:center;padding:20px;z-index:50}.modalBox{width:min(600px,100%);background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px;max-height:90vh;overflow-y:auto}
 .dashboard{background:linear-gradient(135deg, #211626 0%, #17111c 100%);border:1px solid var(--pink);border-radius:18px;padding:22px;margin-bottom:25px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:15px}
 .dashStat{display:flex;flex-direction:column}.dashStat span{color:var(--muted);font-size:14px}.dashStat strong{font-size:32px;color:var(--pink);font-weight:900}
 .menuImg{width:100%;height:130px;object-fit:cover;border-radius:10px;margin-bottom:10px;background:#100b14;border:1px solid var(--line)}
@@ -96,9 +96,55 @@ button,input,select,textarea{font:inherit}button{cursor:pointer;border:0;border-
       <span>📊 จำนวนออเดอร์ที่ชำระแล้ว</span>
       <strong id="todayOrderCount" style="color:#fff">0 ออเดอร์</strong>
     </div>
+    <div style="display:flex; gap:10px; width:100%; margin-top:10px;">
+      <button class="primary" style="flex:1;" onclick="viewTodaySoldItems()">🔍 ดูรายการที่ขายได้วันนี้</button>
+      <button class="success" style="flex:1;" onclick="saveDailySettlement()">💾 บันทึกปิดยอดขายวันนี้</button>
+    </div>
   </div>
 
-  <!-- ส่วนแสดงตารางสรุปชั่วโมงทำงานรายวัน (ใหม่) -->
+  <!-- ส่วนแสดงรายการสินค้าที่ขายได้วันนี้ -->
+  <div style="margin-bottom:25px">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
+      <h3 style="margin:0">📦 รายละเอียดสินค้าที่ขายได้วันนี้</h3>
+      <button class="btn" onclick="renderTodaySoldItems()">↻ อัปเดตรายการ</button>
+    </div>
+    <div class="card tableScrollBox">
+      <table>
+        <thead>
+          <tr>
+            <th>รูปภาพ</th>
+            <th>ชื่อเมนู</th>
+            <th>จำนวนที่ขายได้</th>
+            <th>ราคารวม</th>
+          </tr>
+        </thead>
+        <tbody id="todaySoldItemsList"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ส่วนแสดงตารางประวัติการปิดยอดขายรายวัน -->
+  <div style="margin-bottom:25px">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
+      <h3 style="margin:0">📑 ประวัติการปิดยอดขายรายวัน (Daily Settlement Logs)</h3>
+      <button class="btn" onclick="renderDailySummary()">↻ รีเฟรชยอดขาย</button>
+    </div>
+    <div class="card tableScrollBox">
+      <table>
+        <thead>
+          <tr>
+            <th>วันที่บันทึก</th>
+            <th>จำนวนออเดอร์</th>
+            <th>ยอดขายรวม</th>
+            <th>การจัดการ</th>
+          </tr>
+        </thead>
+        <tbody id="dailySalesList"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ส่วนแสดงตารางสรุปชั่วโมงทำงานรายวัน -->
   <div style="margin-bottom:25px">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
       <h3 style="margin:0">⏱️ สรุปชั่วโมงทำงานพนักงาน (คำนวณแยกวัน)</h3>
@@ -141,7 +187,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer;border:0;border-
 
   <div style="margin-bottom:25px">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
-      <h3 style="margin:0">🔥 เมนูขายดี (สถิติรายการที่สั่งเยอะสุด)</h3>
+      <h3 style="margin:0">🔥 เมนูขายดี (สถิติรวมทั้งหมด)</h3>
     </div>
     <div class="card tableScrollBox">
       <table>
@@ -154,25 +200,6 @@ button,input,select,textarea{font:inherit}button{cursor:pointer;border:0;border-
           </tr>
         </thead>
         <tbody id="topItemsList"></tbody>
-      </table>
-    </div>
-  </div>
-
-  <div style="margin-bottom:25px">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
-      <h3 style="margin:0">📅 สรุปยอดขายย้อนหลังรายวัน</h3>
-      <button class="btn" onclick="renderDailySummary()">↻ รีเฟรชยอดขาย</button>
-    </div>
-    <div class="card tableScrollBox">
-      <table>
-        <thead>
-          <tr>
-            <th>วันที่</th>
-            <th>จำนวนออเดอร์</th>
-            <th>ยอดขายรวม</th>
-          </tr>
-        </thead>
-        <tbody id="dailySalesList"></tbody>
       </table>
     </div>
   </div>
@@ -249,7 +276,7 @@ async function dbDelete(table,id){if(!sb){let a=await dbGet(table);a=a.filter(x=
 async function refreshAll(){
   tables=await dbGet('tables'); menus=await dbGet('menus'); orders=await dbGet('orders');
   await loadStaffList();
-  renderStaff();renderManager();calculateTodaySales();renderDailySummary();renderTopItems();renderAttendanceList();
+  renderStaff();renderManager();calculateTodaySales();renderTodaySoldItems();renderDailySummary();renderTopItems();renderAttendanceList();
 }
 
 async function loadStaffList(){
@@ -324,7 +351,6 @@ function renderAttendanceList(){
     } catch(e){ return null; }
   }).filter(Boolean).sort((a,b) => b.timestamp - a.timestamp);
 
-  // สรุปเวลาทำงาน (ชั่วโมง-นาที) แยกตามวันและคน
   renderWorkHoursSummary(logs);
 
   if(mgrListEl){
@@ -364,12 +390,10 @@ function renderAttendanceList(){
   }
 }
 
-// ฟังก์ชันคำนวณชั่วโมงทำงาน
 function renderWorkHoursSummary(logs) {
   const summaryEl = document.getElementById('workHoursSummaryList');
   if(!summaryEl) return;
 
-  // จัดกลุ่มข้อมูลตาม [วันที่][ชื่อพนักงาน] เรียงตามเวลาเก่าไปใหม่
   const chronologicalLogs = [...logs].reverse();
   const grouped = {};
 
@@ -396,7 +420,6 @@ function renderWorkHoursSummary(logs) {
         }
       });
 
-      // ถ้ายังไม่กดออกเวร ให้คำนวณเวลาปัจจุบันแบบ Realtime
       let isWorking = false;
       if (lastInTime) {
         totalMs += (Date.now() - lastInTime);
@@ -497,14 +520,18 @@ async function removeStaff(index){
   openStaffModal();
 }
 
-function calculateTodaySales(){
+// คำนวณออเดอร์ของวันนี้ที่ชำระเงินแล้ว
+function getTodayPaidOrders(){
   const todayStr = new Date().toDateString();
-  const todayOrders = orders.filter(o => {
+  return orders.filter(o => {
     const isPaid = (o.status === 'ชำระเงินแล้ว' || o.status === 'จบงาน');
     const orderDate = o.created_at ? new Date(o.created_at).toDateString() : todayStr;
     return isPaid && (orderDate === todayStr);
   });
+}
 
+function calculateTodaySales(){
+  const todayOrders = getTodayPaidOrders();
   const totalSales = todayOrders.reduce((sum, o) => sum + Number(o.total || 0), 0);
   const salesEl = document.getElementById('todaySales');
   const countEl = document.getElementById('todayOrderCount');
@@ -513,33 +540,213 @@ function calculateTodaySales(){
   if(countEl) countEl.textContent = todayOrders.length + ' ออเดอร์';
 }
 
+// ฟังก์ชันคำนวณว่า "วันนี้ขายอะไรไปบ้าง"
+function getTodaySoldItemsData(){
+  const todayOrders = getTodayPaidOrders();
+  const itemStats = {};
+
+  todayOrders.forEach(o => {
+    try {
+      const items = JSON.parse(o.items || '[]');
+      items.forEach(it => {
+        if(!itemStats[it.name]) itemStats[it.name] = { qty: 0, total: 0, image_url: '' };
+        itemStats[it.name].qty += Number(it.qty || 0);
+        itemStats[it.name].total += Number(it.price || 0) * Number(it.qty || 0);
+        
+        const foundMenu = menus.find(m => m.name === it.name);
+        if(foundMenu) {
+          const parsed = parseMenuDesc(foundMenu.description);
+          itemStats[it.name].image_url = parsed.img;
+        }
+      });
+    } catch(e){}
+  });
+
+  return Object.keys(itemStats).map(name => ({
+    name,
+    qty: itemStats[name].qty,
+    total: itemStats[name].total,
+    image_url: itemStats[name].image_url
+  })).sort((a,b) => b.qty - a.qty);
+}
+
+// แสดงตารางรายการสินค้าขายดี/ขายได้ในวันนี้
+function renderTodaySoldItems(){
+  const el = document.getElementById('todaySoldItemsList');
+  if(!el) return;
+
+  const soldItems = getTodaySoldItemsData();
+
+  if(!soldItems.length){
+    el.innerHTML = '<tr><td colspan="4" class="empty" style="border:none">ยังไม่มีรายการสินค้าขายได้ในวันนี้</td></tr>';
+    return;
+  }
+
+  el.innerHTML = soldItems.map(item => `
+    <tr>
+      <td>${item.image_url ? `<img src="${esc(item.image_url)}" class="menuThumb" onerror="this.style.display='none'">` : '-'}</td>
+      <td><b>${esc(item.name)}</b></td>
+      <td><b>${item.qty}</b> จาน/ชิ้น</td>
+      <td style="color:var(--pink); font-weight:bold">${money(item.total)}</td>
+    </tr>
+  `).join('');
+}
+
+// เปิด Modal ดูรายการสินค้าที่ขายได้วันนี้แบบละเอียด
+function viewTodaySoldItems(){
+  const soldItems = getTodaySoldItemsData();
+  const todayOrders = getTodayPaidOrders();
+  const totalSales = todayOrders.reduce((sum, o) => sum + Number(o.total || 0), 0);
+
+  let html = `
+    <h3>🔍 สรุปรายการสินค้าที่ขายได้วันนี้</h3>
+    <p class="muted">วันที่: ${new Date().toLocaleDateString('th-TH', {year:'numeric', month:'long', day:'numeric'})}</p>
+    <div style="background:#110a15; padding:12px; border-radius:10px; margin-bottom:15px; border:1px solid var(--line)">
+      <div>รวมยอดขาย: <b style="color:var(--pink); font-size:18px;">${money(totalSales)}</b></div>
+      <div>จำนวนออเดอร์: <b>${todayOrders.length} ออเดอร์</b></div>
+    </div>
+  `;
+
+  if(!soldItems.length){
+    html += '<div class="empty">ยังไม่มีออเดอร์ที่ชำระเงินวันนี้</div>';
+  } else {
+    html += `
+      <div style="max-height:300px; overflow-y:auto">
+        ${soldItems.map(it => `
+          <div class="menuItem">
+            <div style="display:flex; align-items:center; gap:10px">
+              ${it.image_url ? `<img src="${esc(it.image_url)}" class="menuThumb">` : ''}
+              <div>
+                <b>${esc(it.name)}</b>
+                <div class="muted">ขายได้ ${it.qty} รายการ</div>
+              </div>
+            </div>
+            <div style="color:var(--pink); font-weight:bold">${money(it.total)}</div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  html += `<div class="actions" style="margin-top:20px"><button class="btn" style="width:100%" onclick="closeModal()">ปิดหน้าต่าง</button></div>`;
+  showModal(html);
+}
+
+// ฟังก์ชันกด "บันทึกปิดยอดขายประจำวัน"
+async function saveDailySettlement(){
+  const todayOrders = getTodayPaidOrders();
+  const totalSales = todayOrders.reduce((sum, o) => sum + Number(o.total || 0), 0);
+  const soldItems = getTodaySoldItemsData();
+  const dateStr = new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' });
+
+  if(todayOrders.length === 0){
+    return alert('วันนี้ยังไม่มีออเดอร์ที่ชำระเงิน ไม่สามารถปิดยอดได้');
+  }
+
+  if(!confirm(`ยืนยันการบันทึกปิดยอดขายประจำวันที่ ${dateStr}?\n- จำนวน ${todayOrders.length} ออเดอร์\n- ยอดขายรวม ${money(totalSales)}`)) return;
+
+  const settlementData = {
+    date_str: dateStr,
+    timestamp: Date.now(),
+    order_count: todayOrders.length,
+    total_sales: totalSales,
+    items_summary: soldItems
+  };
+
+  const row = {
+    table_id: null,
+    items: JSON.stringify(settlementData),
+    total: totalSales,
+    status: 'DAILY_SETTLEMENT'
+  };
+
+  const res = await dbInsert('orders', row);
+  if(res){
+    alert('บันทึกปิดยอดขายประจำวันสำเร็จเรียบร้อยแล้ว!');
+    refreshAll();
+  }
+}
+
+// แสดงตารางสรุปประวัติการปิดยอดขายรายวัน
 function renderDailySummary(){
   const listEl = document.getElementById('dailySalesList');
   if(!listEl) return;
 
-  const paidOrders = orders.filter(o => o.status === 'ชำระเงินแล้ว' || o.status === 'จบงาน');
-  if (!paidOrders.length) {
-    listEl.innerHTML = '<tr><td colspan="3" class="empty" style="border:none">ยังไม่มีประวัติการชำระเงิน</td></tr>';
+  const settlementOrders = orders.filter(o => o.status === 'DAILY_SETTLEMENT');
+
+  if (!settlementOrders.length) {
+    listEl.innerHTML = '<tr><td colspan="4" class="empty" style="border:none">ยังไม่มีประวัติการบันทึกปิดยอดขายประจำวัน</td></tr>';
     return;
   }
 
-  const salesByDate = {};
-  paidOrders.forEach(o => {
-    const dateObj = o.created_at ? new Date(o.created_at) : new Date();
-    const dateKey = dateObj.toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' });
-    if (!salesByDate[dateKey]) salesByDate[dateKey] = { count: 0, total: 0 };
-    salesByDate[dateKey].count += 1;
-    salesByDate[dateKey].total += Number(o.total || 0);
-  });
+  const rows = settlementOrders.map(o => {
+    try {
+      const data = JSON.parse(o.items || '{}');
+      return {
+        id: o.id,
+        date: data.date_str || (o.created_at ? new Date(o.created_at).toLocaleDateString('th-TH') : 'ไม่ระบุ'),
+        count: data.order_count || 0,
+        total: data.total_sales || o.total || 0,
+        items_summary: data.items_summary || []
+      };
+    } catch(e) { return null; }
+  }).filter(Boolean).reverse();
 
-  const rows = Object.keys(salesByDate).map(date => ({ date, count: salesByDate[date].count, total: salesByDate[date].total }));
   listEl.innerHTML = rows.map(r => `
     <tr>
       <td style="font-weight:bold">${esc(r.date)}</td>
       <td>${r.count} ออเดอร์</td>
       <td style="color:var(--pink); font-weight:bold">${money(r.total)}</td>
+      <td>
+        <button class="btn" style="padding:4px 8px; font-size:12px;" onclick="viewSettlementDetail(${r.id})">🔍 ดูเมนูที่ขายได้</button>
+        <button class="danger" style="padding:4px 8px; font-size:12px; margin-left:4px;" onclick="deleteSettlement(${r.id})">ลบ</button>
+      </td>
     </tr>
   `).join('');
+}
+
+// ดูเมนูที่ขายได้ย้อนหลังจากการปิดยอด
+function viewSettlementDetail(id){
+  const order = orders.find(o => o.id === id);
+  if(!order) return;
+
+  try {
+    const data = JSON.parse(order.items || '{}');
+    const items = data.items_summary || [];
+
+    let html = `
+      <h3>📑 สรุปการปิดยอดวันที่ ${esc(data.date_str)}</h3>
+      <div style="background:#110a15; padding:12px; border-radius:10px; margin-bottom:15px; border:1px solid var(--line)">
+        <div>ยอดขายรวม: <b style="color:var(--pink); font-size:18px;">${money(data.total_sales)}</b></div>
+        <div>จำนวนออเดอร์: <b>${data.order_count} ออเดอร์</b></div>
+      </div>
+      <h4>รายการสินค้าที่ขายได้วันนั้น:</h4>
+      <div style="max-height:250px; overflow-y:auto">
+    `;
+
+    if(!items.length){
+      html += '<div class="empty">ไม่มีข้อมูลสรุปเมนู</div>';
+    } else {
+      html += items.map(it => `
+        <div class="menuItem">
+          <div><b>${esc(it.name)}</b> <span class="muted">x ${it.qty}</span></div>
+          <div style="color:var(--pink); font-weight:bold">${money(it.total)}</div>
+        </div>
+      `).join('');
+    }
+
+    html += `</div><div class="actions" style="margin-top:20px"><button class="btn" style="width:100%" onclick="closeModal()">ปิด</button></div>`;
+    showModal(html);
+  } catch(e) {
+    alert('ไม่สามารถอ่านข้อมูลได้');
+  }
+}
+
+async function deleteSettlement(id){
+  if(confirm('คุณต้องการลบประวัติการปิดยอดรายการนี้ใช่หรือไม่?')){
+    await dbDelete('orders', id);
+    refreshAll();
+  }
 }
 
 function renderTopItems(){
@@ -598,21 +805,21 @@ function renderStaff(){
  const el=document.getElementById('staffTables'); if(!el)return;
  if(!tables.length){el.innerHTML='<div class="empty">ยังไม่มีโต๊ะ ให้ผู้จัดการเพิ่มโต๊ะก่อน</div>';return}
  el.innerHTML=tables.map(t=>{
-    const o=orders.find(x=>x.table_id===t.id && x.status!=='จบงาน' && x.status!=='CLOCK_LOG' && x.status!=='STAFF_LIST');
+    const o=orders.find(x=>x.table_id===t.id && x.status!=='จบงาน' && x.status!=='CLOCK_LOG' && x.status!=='STAFF_LIST' && x.status!=='DAILY_SETTLEMENT');
     return `<div class="card tableCard"><h3>${esc(t.name)}</h3>${o?statusClass(o.status):'<span class="status">ว่าง</span>'}<div class="muted" style="margin-top:8px">${o?'ยอด '+money(o.total):'ยังไม่มีออเดอร์'}</div><div class="actions"><button class="primary" onclick="startTable(${t.id})">${o?'แก้ไขออเดอร์':'รับออเดอร์'}</button>${o?`<button class="btn" onclick="changeStatus(${o.id})">เปลี่ยนสถานะ</button>`:''}</div></div>`
  }).join('');
 }
 
 function renderManager(){
  const te=document.getElementById('managerTables'), me=document.getElementById('managerMenus'); if(!te)return;
- te.innerHTML=tables.length?tables.map(t=>{let o=orders.find(x=>x.table_id===t.id&&x.status!=='จบงาน'&&x.status!=='CLOCK_LOG'&&x.status!=='STAFF_LIST');return `<div class="card"><h3>${esc(t.name)}</h3>${o?`<div>${statusClass(o.status)}<br><b>${money(o.total)}</b></div><div class="actions"><button class="btn" onclick="changeStatus(${o.id})">สถานะ</button><button class="danger" onclick="deleteOrder(${o.id})">ลบออเดอร์</button></div>`:'<div class="muted">ว่าง</div>'}<div class="actions"><button class="btn" onclick="renameTable(${t.id})">แก้ชื่อ</button><button class="danger" onclick="deleteTable(${t.id})">ลบโต๊ะ</button></div></div>`}).join(''):'<div class="empty">ยังไม่มีโต๊ะ</div>';
+ te.innerHTML=tables.length?tables.map(t=>{let o=orders.find(x=>x.table_id===t.id&&x.status!=='จบงาน'&&x.status!=='CLOCK_LOG'&&x.status!=='STAFF_LIST'&&x.status!=='DAILY_SETTLEMENT');return `<div class="card"><h3>${esc(t.name)}</h3>${o?`<div>${statusClass(o.status)}<br><b>${money(o.total)}</b></div><div class="actions"><button class="btn" onclick="changeStatus(${o.id})">สถานะ</button><button class="danger" onclick="deleteOrder(${o.id})">ลบออเดอร์</button></div>`:'<div class="muted">ว่าง</div>'}<div class="actions"><button class="btn" onclick="renameTable(${t.id})">แก้ชื่อ</button><button class="danger" onclick="deleteTable(${t.id})">ลบโต๊ะ</button></div></div>`}).join(''):'<div class="empty">ยังไม่มีโต๊ะ</div>';
  me.innerHTML=menus.length?menus.map(m=>{
     const parsed = parseMenuDesc(m.description);
     return `<div class="menuItem"><div style="display:flex; gap:12px; align-items:center">${parsed.img?`<img src="${esc(parsed.img)}" class="menuThumb" onerror="this.style.display='none'">`:''}<div><b>${esc(m.name)}</b><div class="muted">${esc(parsed.desc||'')}</div></div></div><div class="row"><span class="price">${money(m.price)}</span><button class="btn" onclick="editMenu(${m.id})">แก้</button><button class="danger" onclick="deleteMenu(${m.id})">ลบ</button></div></div>`
  }).join(''):'<div class="empty">ยังไม่มีเมนู</div>';
 }
 
-function startTable(id){currentOrder={table_id:id,items:[]};let old=orders.find(x=>x.table_id===id&&x.status!=='จบงาน'&&x.status!=='CLOCK_LOG'&&x.status!=='STAFF_LIST');if(old)try{currentOrder.items=JSON.parse(old.items||'[]')}catch{};renderOrder();document.getElementById('staffOrder').scrollIntoView({behavior:'smooth'})}
+function startTable(id){currentOrder={table_id:id,items:[]};let old=orders.find(x=>x.table_id===id&&x.status!=='จบงาน'&&x.status!=='CLOCK_LOG'&&x.status!=='STAFF_LIST'&&x.status!=='DAILY_SETTLEMENT');if(old)try{currentOrder.items=JSON.parse(old.items||'[]')}catch{};renderOrder();document.getElementById('staffOrder').scrollIntoView({behavior:'smooth'})}
 function openOrder(){if(!tables.length){alert('ยังไม่มีโต๊ะ');return}startTable(tables[0].id)}
 function renderOrder(){
  const p=document.getElementById('staffOrder');p.classList.remove('hidden');
@@ -624,7 +831,7 @@ function renderOrder(){
 function addItem(id){let m=menus.find(x=>x.id===id),it=currentOrder.items.find(x=>x.menu_id===id);if(it)it.qty++;else currentOrder.items.push({menu_id:id,name:m.name,price:Number(m.price),qty:1});renderOrder()}
 function qty(i,d){currentOrder.items[i].qty+=d;if(currentOrder.items[i].qty<=0)currentOrder.items.splice(i,1);renderOrder()}
 function total(){return currentOrder.items.reduce((s,x)=>s+x.price*x.qty,0)}
-async function saveOrder(){if(!currentOrder.items.length){alert('กรุณาเลือกเมนูก่อน');return}let old=orders.find(x=>x.table_id===currentOrder.table_id&&x.status!=='จบงาน'&&x.status!=='CLOCK_LOG'&&x.status!=='STAFF_LIST');let row={table_id:currentOrder.table_id,items:JSON.stringify(currentOrder.items),total:total(),status:old?old.status:'รออาหาร'};if(old)await dbUpdate('orders',old.id,row);else await dbInsert('orders',row);alert('บันทึกออเดอร์แล้ว');await refreshAll();document.getElementById('staffOrder').classList.add('hidden')}
+async function saveOrder(){if(!currentOrder.items.length){alert('กรุณาเลือกเมนูก่อน');return}let old=orders.find(x=>x.table_id===currentOrder.table_id&&x.status!=='จบงาน'&&x.status!=='CLOCK_LOG'&&x.status!=='STAFF_LIST'&&x.status!=='DAILY_SETTLEMENT');let row={table_id:currentOrder.table_id,items:JSON.stringify(currentOrder.items),total:total(),status:old?old.status:'รออาหาร'};if(old)await dbUpdate('orders',old.id,row);else await dbInsert('orders',row);alert('บันทึกออเดอร์แล้ว');await refreshAll();document.getElementById('staffOrder').classList.add('hidden')}
 
 async function changeStatus(id){let o=orders.find(x=>x.id===id);let html=`<h3>เปลี่ยนสถานะ — ${tableName(o.table_id)}</h3><div class="field"><select id="newStatus">${statuses.map(s=>`<option ${s===o.status?'selected':''}>${s}</option>`).join('')}</select></div><div class="actions"><button class="btn" onclick="closeModal()">ยกเลิก</button><button class="primary" onclick="saveStatus(${id})">บันทึก</button></div>`;showModal(html)}
 async function saveStatus(id){await dbUpdate('orders',id,{status:document.getElementById('newStatus').value});closeModal();refreshAll()}
