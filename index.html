@@ -141,17 +141,21 @@ if (sb) {
     .subscribe();
 }
 
-// ฟังก์ชันแปลงลิงก์รูปภาพ Discord และเว็บฝากรูปให้แสดงผลได้ชัวร์ขึ้น
-function parseImageUrl(url) {
-  if (!url) return '';
-  let u = url.trim();
-  
-  // แปลงลิงก์แนบไฟล์ Discord (cdn.discordapp.com / media.discordapp.net)
-  if (u.includes('discordapp.com/attachments/') || u.includes('discordapp.net/attachments/')) {
-    // ตัดพารามิเตอร์แปลกๆ ออก หรือแปลงให้รองรับการโหลดโดยตรง
-    u = u.replace('cdn.discordapp.com', 'media.discordapp.net');
+// ฟังก์ชันดึงรูปภาพและรายละเอียดออกจาก description เดิม
+function parseMenuDesc(descText) {
+  if (!descText) return { img: '', desc: '' };
+  const match = descText.match(/\[IMG:(.*?)\]/);
+  if (match) {
+    let rawUrl = match[1];
+    if (rawUrl.includes('discordapp.com/attachments/') || rawUrl.includes('discordapp.net/attachments/')) {
+      rawUrl = rawUrl.replace('cdn.discordapp.com', 'media.discordapp.net');
+    }
+    return {
+      img: rawUrl,
+      desc: descText.replace(/\[IMG:.*?\]/, '').trim()
+    };
   }
-  return u;
+  return { img: '', desc: descText };
 }
 
 function enterRole(r){
@@ -243,7 +247,10 @@ function renderTopItems(){
         itemStats[it.name].total += Number(it.price || 0) * Number(it.qty || 0);
         
         const foundMenu = menus.find(m => m.name === it.name);
-        if(foundMenu && foundMenu.image_url) itemStats[it.name].image_url = parseImageUrl(foundMenu.image_url);
+        if(foundMenu) {
+          const parsed = parseMenuDesc(foundMenu.description);
+          itemStats[it.name].image_url = parsed.img;
+        }
       });
     } catch(e){}
   });
@@ -289,8 +296,8 @@ function renderManager(){
  const te=document.getElementById('managerTables'), me=document.getElementById('managerMenus'); if(!te)return;
  te.innerHTML=tables.length?tables.map(t=>{let o=orders.find(x=>x.table_id===t.id&&x.status!=='จบงาน');return `<div class="card"><h3>${esc(t.name)}</h3>${o?`<div>${statusClass(o.status)}<br><b>${money(o.total)}</b></div><div class="actions"><button class="btn" onclick="changeStatus(${o.id})">สถานะ</button><button class="danger" onclick="deleteOrder(${o.id})">ลบออเดอร์</button></div>`:'<div class="muted">ว่าง</div>'}<div class="actions"><button class="btn" onclick="renameTable(${t.id})">แก้ชื่อ</button><button class="danger" onclick="deleteTable(${t.id})">ลบโต๊ะ</button></div></div>`}).join(''):'<div class="empty">ยังไม่มีโต๊ะ</div>';
  me.innerHTML=menus.length?menus.map(m=>{
-   const imgUrl = parseImageUrl(m.image_url);
-   return `<div class="menuItem"><div style="display:flex; gap:12px; align-items:center">${imgUrl?`<img src="${esc(imgUrl)}" class="menuThumb" onerror="this.style.display='none'">`:''}<div><b>${esc(m.name)}</b><div class="muted">${esc(m.description||'')}</div></div></div><div class="row"><span class="price">${money(m.price)}</span><button class="btn" onclick="editMenu(${m.id})">แก้</button><button class="danger" onclick="deleteMenu(${m.id})">ลบ</button></div></div>`
+   const parsed = parseMenuDesc(m.description);
+   return `<div class="menuItem"><div style="display:flex; gap:12px; align-items:center">${parsed.img?`<img src="${esc(parsed.img)}" class="menuThumb" onerror="this.style.display='none'">`:''}<div><b>${esc(m.name)}</b><div class="muted">${esc(parsed.desc||'')}</div></div></div><div class="row"><span class="price">${money(m.price)}</span><button class="btn" onclick="editMenu(${m.id})">แก้</button><button class="danger" onclick="deleteMenu(${m.id})">ลบ</button></div></div>`
  }).join(''):'<div class="empty">ยังไม่มีเมนู</div>';
 }
 
@@ -299,8 +306,8 @@ function openOrder(){if(!tables.length){alert('ยังไม่มีโต๊
 function renderOrder(){
  const p=document.getElementById('staffOrder');p.classList.remove('hidden');
  p.innerHTML=`<h3>ออเดอร์ — ${tableName(currentOrder.table_id)}</h3><div class="grid">${menus.map(m=>{
-   const imgUrl = parseImageUrl(m.image_url);
-   return `<div class="card">${imgUrl?`<img src="${esc(imgUrl)}" class="menuImg" onerror="this.style.display='none'">`:''}<b>${esc(m.name)}</b><div class="price">${money(m.price)}</div><button class="primary" onclick="addItem(${m.id})">＋ เพิ่ม</button></div>`
+   const parsed = parseMenuDesc(m.description);
+   return `<div class="card">${parsed.img?`<img src="${esc(parsed.img)}" class="menuImg" onerror="this.style.display='none'">`:''}<b>${esc(m.name)}</b><div class="price">${money(m.price)}</div><button class="primary" onclick="addItem(${m.id})">＋ เพิ่ม</button></div>`
  }).join('')}</div><div style="margin-top:20px"><h3>รายการ</h3>${currentOrder.items.length?currentOrder.items.map((it,i)=>`<div class="menuItem"><div>${esc(it.name)} × ${it.qty}</div><div class="row"><b>${money(it.price*it.qty)}</b><button class="btn" onclick="qty(${i},-1)">−</button><button class="btn" onclick="qty(${i},1)">＋</button></div></div>`).join(''):'<div class="empty">ยังไม่มีรายการ</div>'}</div><div class="row" style="justify-content:space-between;margin-top:18px"><div class="total">${money(total())}</div><div class="row"><button class="btn" onclick="document.getElementById('staffOrder').classList.add('hidden')">ปิด</button><button class="primary" onclick="saveOrder()">บันทึกออเดอร์</button></div></div>`;
 }
 function addItem(id){let m=menus.find(x=>x.id===id),it=currentOrder.items.find(x=>x.menu_id===id);if(it)it.qty++;else currentOrder.items.push({menu_id:id,name:m.name,price:Number(m.price),qty:1});renderOrder()}
@@ -318,16 +325,16 @@ async function saveTable(id){await dbUpdate('tables',id,{name:document.getElemen
 async function deleteTable(id){if(orders.some(o=>o.table_id===id)){alert('โต๊ะนี้มีออเดอร์อยู่ ลบออเดอร์ก่อน');return}if(confirm('ลบโต๊ะนี้ใช่หรือไม่?')){await dbDelete('tables',id);refreshAll()}}
 
 async function openMenuModal(m=null){
+  const parsed = m ? parseMenuDesc(m.description) : { img: '', desc: '' };
   showModal(`
     <h3>${m?'แก้ไข':'เพิ่ม'}เมนู</h3>
     <div class="field"><label>ชื่อเมนู</label><input id="menuName" value="${m?esc(m.name):''}"></div>
     <div class="field"><label>ราคา</label><input id="menuPrice" type="number" step="0.01" value="${m?m.price:''}"></div>
     <div class="field">
       <label>ลิงก์รูปภาพ ( Discord หรือ เว็บฝากรูป )</label>
-      <input id="menuImg" placeholder="คัดลอกลิงก์รูปภาพมาวางที่นี่..." value="${m?esc(m.image_url||''):''}">
-      <small style="color:var(--muted); font-size:11px; display:block; margin-top:4px;">💡 ใน Discord: คลิกขวาที่รูป > คัดลอกลิงก์รูปภาพ (Copy Image Link)</small>
+      <input id="menuImg" placeholder="คัดลอกลิงก์รูปภาพมาวางที่นี่..." value="${esc(parsed.img)}">
     </div>
-    <div class="field"><label>รายละเอียด</label><textarea id="menuDesc">${m?esc(m.description||''):''}</textarea></div>
+    <div class="field"><label>รายละเอียด</label><textarea id="menuDesc">${esc(parsed.desc)}</textarea></div>
     <div class="actions"><button class="btn" onclick="closeModal()">ยกเลิก</button><button class="primary" onclick="${m?`saveMenu(${m.id})`:'addMenu()'}">บันทึก</button></div>
   `);
 }
@@ -338,7 +345,10 @@ async function addMenu(){
       img=document.getElementById('menuImg').value.trim(),
       d=document.getElementById('menuDesc').value.trim();
   if(!n||!p)return alert('กรอกชื่อและราคา');
-  await dbInsert('menus',{name:n,price:p,image_url:img,description:d});
+  
+  // รวมลิงก์รูปใส่ไว้ใน description เพื่อหลีกเลี่ยงการสร้างคอลัมน์ใหม่ใน Supabase
+  let fullDesc = img ? `[IMG:${img}] ${d}` : d;
+  await dbInsert('menus',{name:n,price:p,description:fullDesc});
   closeModal();refreshAll();
 }
 async function saveMenu(id){
@@ -346,7 +356,9 @@ async function saveMenu(id){
       p=Number(document.getElementById('menuPrice').value),
       img=document.getElementById('menuImg').value.trim(),
       d=document.getElementById('menuDesc').value.trim();
-  await dbUpdate('menus',id,{name:n,price:p,image_url:img,description:d});
+      
+  let fullDesc = img ? `[IMG:${img}] ${d}` : d;
+  await dbUpdate('menus',id,{name:n,price:p,description:fullDesc});
   closeModal();refreshAll();
 }
 async function deleteMenu(id){if(confirm('ลบเมนูนี้ใช่หรือไม่?')){await dbDelete('menus',id);refreshAll()}}
