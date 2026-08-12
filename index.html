@@ -23,6 +23,8 @@ button,input,select,textarea{font:inherit}button{cursor:pointer;border:0;border-
 .modal{position:fixed;inset:0;background:#000b;display:flex;align-items:center;justify-content:center;padding:20px;z-index:50}.modalBox{width:min(550px,100%);background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px}
 .dashboard{background:linear-gradient(135deg, #211626 0%, #17111c 100%);border:1px solid var(--pink);border-radius:18px;padding:22px;margin-bottom:25px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:15px}
 .dashStat{display:flex;flex-direction:column}.dashStat span{color:var(--muted);font-size:14px}.dashStat strong{font-size:32px;color:var(--pink);font-weight:900}
+.menuImg{width:100%;height:130px;object-fit:cover;border-radius:10px;margin-bottom:10px;background:#100b14;border:1px solid var(--line)}
+.menuThumb{width:48px;height:48px;object-fit:cover;border-radius:8px;background:#100b14;border:1px solid var(--line);flex-shrink:0}
 @media(max-width:800px){.roleGrid,.cols{grid-template-columns:1fr}.top{padding:0 14px}.logo{font-size:22px}}
 </style>
 </head>
@@ -57,7 +59,6 @@ button,input,select,textarea{font:inherit}button{cursor:pointer;border:0;border-
     <button class="primary" onclick="openMenuModal()">＋ เพิ่มเมนู</button>
   </div>
   
-  <!-- ส่วนแสดงสรุปยอดขายประจำวัน -->
   <div class="dashboard">
     <div class="dashStat">
       <span>💰 ยอดขายวันนี้</span>
@@ -69,6 +70,26 @@ button,input,select,textarea{font:inherit}button{cursor:pointer;border:0;border-
     </div>
   </div>
 
+  <!-- ส่วนแสดงสถิติเมนูขายดี -->
+  <div style="margin-bottom:25px">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
+      <h3 style="margin:0">🔥 เมนูขายดี (สถิติรายการที่สั่งเยอะสุด)</h3>
+    </div>
+    <div class="card" style="overflow-x:auto">
+      <table style="width:100%; text-align:left; border-collapse:collapse;">
+        <thead>
+          <tr style="border-bottom:1px solid var(--line); color:var(--muted)">
+            <th style="padding:10px">อันดับ</th>
+            <th style="padding:10px">เมนู</th>
+            <th style="padding:10px">จำนวนที่ขายได้</th>
+            <th style="padding:10px">ยอดขายรวม</th>
+          </tr>
+        </thead>
+        <tbody id="topItemsList"></tbody>
+      </table>
+    </div>
+  </div>
+
   <!-- ส่วนแสดงสรุปยอดขายย้อนหลังรายวัน -->
   <div style="margin-bottom:25px">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
@@ -76,7 +97,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer;border:0;border-
       <button class="btn" onclick="renderDailySummary()">↻ รีเฟรชยอดขาย</button>
     </div>
     <div class="card" style="overflow-x:auto">
-      <table style="width:100%; text-align:left; border-collapse:collapse;" id="dailySalesTable">
+      <table style="width:100%; text-align:left; border-collapse:collapse;">
         <thead>
           <tr style="border-bottom:1px solid var(--line); color:var(--muted)">
             <th style="padding:10px">วันที่</th>
@@ -84,9 +105,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer;border:0;border-
             <th style="padding:10px">ยอดขายรวม</th>
           </tr>
         </thead>
-        <tbody id="dailySalesList">
-          <!-- ข้อมูลยอดขายย้อนหลังจะแสดงที่นี่ -->
-        </tbody>
+        <tbody id="dailySalesList"></tbody>
       </table>
     </div>
   </div>
@@ -116,7 +135,6 @@ const cfg=window.SUPABASE_CONFIG||{};
 if(cfg.url && cfg.publishableKey && window.supabase)
   sb=supabase.createClient(cfg.url,cfg.publishableKey);
 
-// Realtime Sync
 if (sb) {
   sb.channel('77-star-realtime')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'tables' }, () => refreshAll())
@@ -150,14 +168,11 @@ async function dbDelete(table,id){if(!sb){let a=await dbGet(table);a=a.filter(x=
 
 async function refreshAll(){
   tables=await dbGet('tables'); menus=await dbGet('menus'); orders=await dbGet('orders');
-  renderStaff();renderManager();calculateTodaySales();renderDailySummary();
+  renderStaff();renderManager();calculateTodaySales();renderDailySummary();renderTopItems();
 }
 
-// ฟังก์ชันคำนวณยอดขายประจำวัน
 function calculateTodaySales(){
   const todayStr = new Date().toDateString();
-  
-  // กรองเฉพาะออเดอร์ของวันนี้ที่มีสถานะเป็น 'ชำระเงินแล้ว' หรือ 'จบงาน'
   const todayOrders = orders.filter(o => {
     const isPaid = (o.status === 'ชำระเงินแล้ว' || o.status === 'จบงาน');
     const orderDate = o.created_at ? new Date(o.created_at).toDateString() : todayStr;
@@ -165,7 +180,6 @@ function calculateTodaySales(){
   });
 
   const totalSales = todayOrders.reduce((sum, o) => sum + Number(o.total || 0), 0);
-  
   const salesEl = document.getElementById('todaySales');
   const countEl = document.getElementById('todayOrderCount');
   
@@ -173,49 +187,78 @@ function calculateTodaySales(){
   if(countEl) countEl.textContent = todayOrders.length + ' ออเดอร์';
 }
 
-// ฟังก์ชันคำนวณและแสดงผลประวัติยอดขายแยกตามวัน
 function renderDailySummary(){
   const listEl = document.getElementById('dailySalesList');
   if(!listEl) return;
 
-  // กรองเฉพาะออเดอร์ที่ชำระเงินแล้ว หรือจบงาน
   const paidOrders = orders.filter(o => o.status === 'ชำระเงินแล้ว' || o.status === 'จบงาน');
-
   if (!paidOrders.length) {
     listEl.innerHTML = '<tr><td colspan="3" class="empty" style="border:none">ยังไม่มีประวัติการชำระเงิน</td></tr>';
     return;
   }
 
-  // จัดกลุ่มออเดอร์ตามวันที่
   const salesByDate = {};
-
   paidOrders.forEach(o => {
     const dateObj = o.created_at ? new Date(o.created_at) : new Date();
-    const dateKey = dateObj.toLocaleDateString('th-TH', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-
-    if (!salesByDate[dateKey]) {
-      salesByDate[dateKey] = { count: 0, total: 0 };
-    }
-
+    const dateKey = dateObj.toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' });
+    if (!salesByDate[dateKey]) salesByDate[dateKey] = { count: 0, total: 0 };
     salesByDate[dateKey].count += 1;
     salesByDate[dateKey].total += Number(o.total || 0);
   });
 
-  const rows = Object.keys(salesByDate).map(date => ({
-    date,
-    count: salesByDate[date].count,
-    total: salesByDate[date].total
-  }));
-
+  const rows = Object.keys(salesByDate).map(date => ({ date, count: salesByDate[date].count, total: salesByDate[date].total }));
   listEl.innerHTML = rows.map(r => `
     <tr style="border-bottom:1px solid #281d2e">
       <td style="padding:12px 10px; font-weight:bold">${esc(r.date)}</td>
       <td style="padding:12px 10px">${r.count} ออเดอร์</td>
       <td style="padding:12px 10px; color:var(--pink); font-weight:bold">${money(r.total)}</td>
+    </tr>
+  `).join('');
+}
+
+// ฟังก์ชันคำนวณสถิติเมนูขายดี
+function renderTopItems(){
+  const topEl = document.getElementById('topItemsList');
+  if(!topEl) return;
+
+  const paidOrders = orders.filter(o => o.status === 'ชำระเงินแล้ว' || o.status === 'จบงาน');
+  const itemStats = {};
+
+  paidOrders.forEach(o => {
+    try {
+      const items = JSON.parse(o.items || '[]');
+      items.forEach(it => {
+        if(!itemStats[it.name]) itemStats[it.name] = { qty: 0, total: 0, image_url: '' };
+        itemStats[it.name].qty += Number(it.qty || 0);
+        itemStats[it.name].total += Number(it.price || 0) * Number(it.qty || 0);
+        
+        const foundMenu = menus.find(m => m.name === it.name);
+        if(foundMenu && foundMenu.image_url) itemStats[it.name].image_url = foundMenu.image_url;
+      });
+    } catch(e){}
+  });
+
+  const sorted = Object.keys(itemStats).map(name => ({
+    name,
+    qty: itemStats[name].qty,
+    total: itemStats[name].total,
+    image_url: itemStats[name].image_url
+  })).sort((a,b) => b.qty - a.qty);
+
+  if(!sorted.length) {
+    topEl.innerHTML = '<tr><td colspan="4" class="empty" style="border:none">ยังไม่มีสถิติการสั่งซื้อ</td></tr>';
+    return;
+  }
+
+  topEl.innerHTML = sorted.slice(0, 10).map((item, idx) => `
+    <tr style="border-bottom:1px solid #281d2e">
+      <td style="padding:12px 10px; font-weight:bold; color:var(--pink)">#${idx + 1}</td>
+      <td style="padding:12px 10px; display:flex; align-items:center; gap:10px">
+        ${item.image_url ? `<img src="${esc(item.image_url)}" class="menuThumb">` : ''}
+        <b>${esc(item.name)}</b>
+      </td>
+      <td style="padding:12px 10px"><b>${item.qty}</b> จาน/ชิ้น</td>
+      <td style="padding:12px 10px; color:var(--pink); font-weight:bold">${money(item.total)}</td>
     </tr>
   `).join('');
 }
@@ -235,14 +278,14 @@ function renderStaff(){
 function renderManager(){
  const te=document.getElementById('managerTables'), me=document.getElementById('managerMenus'); if(!te)return;
  te.innerHTML=tables.length?tables.map(t=>{let o=orders.find(x=>x.table_id===t.id&&x.status!=='จบงาน');return `<div class="card"><h3>${esc(t.name)}</h3>${o?`<div>${statusClass(o.status)}<br><b>${money(o.total)}</b></div><div class="actions"><button class="btn" onclick="changeStatus(${o.id})">สถานะ</button><button class="danger" onclick="deleteOrder(${o.id})">ลบออเดอร์</button></div>`:'<div class="muted">ว่าง</div>'}<div class="actions"><button class="btn" onclick="renameTable(${t.id})">แก้ชื่อ</button><button class="danger" onclick="deleteTable(${t.id})">ลบโต๊ะ</button></div></div>`}).join(''):'<div class="empty">ยังไม่มีโต๊ะ</div>';
- me.innerHTML=menus.length?menus.map(m=>`<div class="menuItem"><div><b>${esc(m.name)}</b><div class="muted">${esc(m.description||'')}</div></div><div class="row"><span class="price">${money(m.price)}</span><button class="btn" onclick="editMenu(${m.id})">แก้</button><button class="danger" onclick="deleteMenu(${m.id})">ลบ</button></div></div>`).join(''):'<div class="empty">ยังไม่มีเมนู</div>';
+ me.innerHTML=menus.length?menus.map(m=>`<div class="menuItem"><div style="display:flex; gap:12px; align-items:center">${m.image_url?`<img src="${esc(m.image_url)}" class="menuThumb">`:''}<div><b>${esc(m.name)}</b><div class="muted">${esc(m.description||'')}</div></div></div><div class="row"><span class="price">${money(m.price)}</span><button class="btn" onclick="editMenu(${m.id})">แก้</button><button class="danger" onclick="deleteMenu(${m.id})">ลบ</button></div></div>`).join(''):'<div class="empty">ยังไม่มีเมนู</div>';
 }
 
 function startTable(id){currentOrder={table_id:id,items:[]};let old=orders.find(x=>x.table_id===id&&x.status!=='จบงาน');if(old)try{currentOrder.items=JSON.parse(old.items||'[]')}catch{};renderOrder();document.getElementById('staffOrder').scrollIntoView({behavior:'smooth'})}
 function openOrder(){if(!tables.length){alert('ยังไม่มีโต๊ะ');return}startTable(tables[0].id)}
 function renderOrder(){
  const p=document.getElementById('staffOrder');p.classList.remove('hidden');
- p.innerHTML=`<h3>ออเดอร์ — ${tableName(currentOrder.table_id)}</h3><div class="grid">${menus.map(m=>`<div class="card"><b>${esc(m.name)}</b><div class="price">${money(m.price)}</div><button class="primary" onclick="addItem(${m.id})">＋ เพิ่ม</button></div>`).join('')}</div><div style="margin-top:20px"><h3>รายการ</h3>${currentOrder.items.length?currentOrder.items.map((it,i)=>`<div class="menuItem"><div>${esc(it.name)} × ${it.qty}</div><div class="row"><b>${money(it.price*it.qty)}</b><button class="btn" onclick="qty(${i},-1)">−</button><button class="btn" onclick="qty(${i},1)">＋</button></div></div>`).join(''):'<div class="empty">ยังไม่มีรายการ</div>'}</div><div class="row" style="justify-content:space-between;margin-top:18px"><div class="total">${money(total())}</div><div class="row"><button class="btn" onclick="document.getElementById('staffOrder').classList.add('hidden')">ปิด</button><button class="primary" onclick="saveOrder()">บันทึกออเดอร์</button></div></div>`;
+ p.innerHTML=`<h3>ออเดอร์ — ${tableName(currentOrder.table_id)}</h3><div class="grid">${menus.map(m=>`<div class="card">${m.image_url?`<img src="${esc(m.image_url)}" class="menuImg">`:''}<b>${esc(m.name)}</b><div class="price">${money(m.price)}</div><button class="primary" onclick="addItem(${m.id})">＋ เพิ่ม</button></div>`).join('')}</div><div style="margin-top:20px"><h3>รายการ</h3>${currentOrder.items.length?currentOrder.items.map((it,i)=>`<div class="menuItem"><div>${esc(it.name)} × ${it.qty}</div><div class="row"><b>${money(it.price*it.qty)}</b><button class="btn" onclick="qty(${i},-1)">−</button><button class="btn" onclick="qty(${i},1)">＋</button></div></div>`).join(''):'<div class="empty">ยังไม่มีรายการ</div>'}</div><div class="row" style="justify-content:space-between;margin-top:18px"><div class="total">${money(total())}</div><div class="row"><button class="btn" onclick="document.getElementById('staffOrder').classList.add('hidden')">ปิด</button><button class="primary" onclick="saveOrder()">บันทึกออเดอร์</button></div></div>`;
 }
 function addItem(id){let m=menus.find(x=>x.id===id),it=currentOrder.items.find(x=>x.menu_id===id);if(it)it.qty++;else currentOrder.items.push({menu_id:id,name:m.name,price:Number(m.price),qty:1});renderOrder()}
 function qty(i,d){currentOrder.items[i].qty+=d;if(currentOrder.items[i].qty<=0)currentOrder.items.splice(i,1);renderOrder()}
@@ -257,10 +300,36 @@ async function addTable(){let n=document.getElementById('tableName').value.trim(
 async function renameTable(id){let t=tables.find(x=>x.id===id);showModal(`<h3>แก้ชื่อโต๊ะ</h3><div class="field"><input id="tableName" value="${esc(t.name)}"></div><div class="actions"><button class="btn" onclick="closeModal()">ยกเลิก</button><button class="primary" onclick="saveTable(${id})">บันทึก</button></div>`)}
 async function saveTable(id){await dbUpdate('tables',id,{name:document.getElementById('tableName').value.trim()});closeModal();refreshAll()}
 async function deleteTable(id){if(orders.some(o=>o.table_id===id)){alert('โต๊ะนี้มีออเดอร์อยู่ ลบออเดอร์ก่อน');return}if(confirm('ลบโต๊ะนี้ใช่หรือไม่?')){await dbDelete('tables',id);refreshAll()}}
-async function openMenuModal(m=null){showModal(`<h3>${m?'แก้ไข':'เพิ่ม'}เมนู</h3><div class="field"><label>ชื่อเมนู</label><input id="menuName" value="${m?esc(m.name):''}"></div><div class="field"><label>ราคา</label><input id="menuPrice" type="number" step="0.01" value="${m?m.price:''}"></div><div class="field"><label>รายละเอียด</label><textarea id="menuDesc">${m?esc(m.description||''):''}</textarea></div><div class="actions"><button class="btn" onclick="closeModal()">ยกเลิก</button><button class="primary" onclick="${m?`saveMenu(${m.id})`:'addMenu()'}">บันทึก</button></div>`)}
+
+// ปรับปรุงการจัดการเมนูรองรับลิงก์รูปภาพ (URL)
+async function openMenuModal(m=null){
+  showModal(`
+    <h3>${m?'แก้ไข':'เพิ่ม'}เมนู</h3>
+    <div class="field"><label>ชื่อเมนู</label><input id="menuName" value="${m?esc(m.name):''}"></div>
+    <div class="field"><label>ราคา</label><input id="menuPrice" type="number" step="0.01" value="${m?m.price:''}"></div>
+    <div class="field"><label>ลิงก์รูปภาพ (URL)</label><input id="menuImg" placeholder="https://example.com/image.jpg" value="${m?esc(m.image_url||''):''}"></div>
+    <div class="field"><label>รายละเอียด</label><textarea id="menuDesc">${m?esc(m.description||''):''}</textarea></div>
+    <div class="actions"><button class="btn" onclick="closeModal()">ยกเลิก</button><button class="primary" onclick="${m?`saveMenu(${m.id})`:'addMenu()'}">บันทึก</button></div>
+  `);
+}
 function editMenu(id){openMenuModal(menus.find(x=>x.id===id))}
-async function addMenu(){let n=document.getElementById('menuName').value.trim(),p=Number(document.getElementById('menuPrice').value),d=document.getElementById('menuDesc').value.trim();if(!n||!p)return alert('กรอกชื่อและราคา');await dbInsert('menus',{name:n,price:p,description:d});closeModal();refreshAll()}
-async function saveMenu(id){let n=document.getElementById('menuName').value.trim(),p=Number(document.getElementById('menuPrice').value),d=document.getElementById('menuDesc').value.trim();await dbUpdate('menus',id,{name:n,price:p,description:d});closeModal();refreshAll()}
+async function addMenu(){
+  let n=document.getElementById('menuName').value.trim(),
+      p=Number(document.getElementById('menuPrice').value),
+      img=document.getElementById('menuImg').value.trim(),
+      d=document.getElementById('menuDesc').value.trim();
+  if(!n||!p)return alert('กรอกชื่อและราคา');
+  await dbInsert('menus',{name:n,price:p,image_url:img,description:d});
+  closeModal();refreshAll();
+}
+async function saveMenu(id){
+  let n=document.getElementById('menuName').value.trim(),
+      p=Number(document.getElementById('menuPrice').value),
+      img=document.getElementById('menuImg').value.trim(),
+      d=document.getElementById('menuDesc').value.trim();
+  await dbUpdate('menus',id,{name:n,price:p,image_url:img,description:d});
+  closeModal();refreshAll();
+}
 async function deleteMenu(id){if(confirm('ลบเมนูนี้ใช่หรือไม่?')){await dbDelete('menus',id);refreshAll()}}
 function showModal(h){document.getElementById('modalBox').innerHTML=h;document.getElementById('modal').classList.remove('hidden')}
 function closeModal(){document.getElementById('modal').classList.add('hidden')}
