@@ -436,7 +436,8 @@ function renderAttendanceList(){
     try {
       const data = JSON.parse(o.items || '[]')[0] || {};
       const timeStamp = data.timestamp || (o.created_at ? new Date(o.created_at).getTime() : Date.now());
-      const timeDisplay = new Date(timeStamp).toLocaleString('th-TH');
+      // ปรับ Format เวลาให้แสดงวินาทีด้วย
+      const timeDisplay = new Date(timeStamp).toLocaleString('th-TH', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' });
       const dateKey = new Date(timeStamp).toLocaleDateString('th-TH');
       return {
         id: o.id,
@@ -524,9 +525,11 @@ function renderWorkHoursSummary(logs) {
         isWorking = true;
       }
 
-      const totalMinutes = Math.floor(totalMs / (1000 * 60));
-      const hours = Math.floor(totalMinutes / 60);
-      const mins = totalMinutes % 60;
+      // คำนวณเพิ่มวินาที
+      const totalSeconds = Math.floor(totalMs / 1000);
+      const hours = Math.floor(totalSeconds / 3600);
+      const mins = Math.floor((totalSeconds % 3600) / 60);
+      const secs = totalSeconds % 60;
 
       const logIdsToDelete = staffLogs.map(l => l.id);
 
@@ -535,6 +538,7 @@ function renderWorkHoursSummary(logs) {
         staffName,
         hours,
         mins,
+        secs, // เพิ่มวินาที
         isWorking,
         ids: logIdsToDelete
       });
@@ -546,12 +550,13 @@ function renderWorkHoursSummary(logs) {
     return;
   }
 
+  // อัปเดตการแสดงผลในหน้าเว็บให้มีวินาที
   summaryEl.innerHTML = summaryRows.reverse().map(s => `
     <tr>
       <td style="font-weight:bold">${esc(s.dateKey)}</td>
       <td><b>${esc(s.staffName)}</b></td>
       <td style="color:var(--pink); font-weight:bold">
-        ${s.hours} ชั่วโมง ${s.mins} นาที 
+        ${s.hours} ชั่วโมง ${s.mins} นาที ${s.secs} วินาที 
         ${s.isWorking ? '<span class="status" style="background:#173d2b; color:var(--ok); margin-left:6px;">กำลังเข้าเวร</span>' : ''}
       </td>
       <td>
