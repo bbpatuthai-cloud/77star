@@ -232,14 +232,13 @@ if(cfg.url && cfg.publishableKey && window.supabase)
 
 if (sb) {
   sb.channel('77-star-realtime')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'uwu_tables' }, () => refreshAll())
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'uwu_menus' }, () => refreshAll())
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'uwu_orders' }, () => refreshAll())
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'uwu_staff' }, () => refreshAll())
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'star_tables' }, () => refreshAll())
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'star_menus' }, () => refreshAll())
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'star_orders' }, () => refreshAll())
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'star_staff' }, () => refreshAll())
     .subscribe();
 }
 
-// ฟังก์ชันสำหรับส่งข้อมูลไปยัง Discord Webhook
 async function sendDiscordWebhook(embedData) {
   if (!DISCORD_WEBHOOK_URL) return;
   try {
@@ -275,9 +274,6 @@ function parseMenuDesc(descText) {
   }
 }
 
-// ----------------------------------------------------
-// ระบบยืนยันรหัสผ่านเข้าหน้าผู้จัดการ (Role Access Control)
-// ----------------------------------------------------
 async function getManagerPassword() {
   const pwdLogs = orders.filter(o => o.status === 'MANAGER_PWD');
   if (pwdLogs.length > 0) {
@@ -340,15 +336,12 @@ async function saveNewPassword() {
     status: 'MANAGER_PWD'
   };
 
-  await dbInsert('uwu_orders', row);
+  await dbInsert('star_orders', row);
   localStorage.setItem('77_manager_pwd', newPwdInput);
   alert('🟢 เปลี่ยนรหัสผ่านสำเร็จ!');
   closeModal();
 }
 
-// ----------------------------------------------------
-// ระบบลบสถิติ/ยอดขาย
-// ----------------------------------------------------
 async function resetTodaySales() {
   const todayOrders = getTodayPaidOrders();
   if (todayOrders.length === 0) {
@@ -357,7 +350,7 @@ async function resetTodaySales() {
 
   if (confirm(`⚠️ คุณแน่ใจหรือไม่ว่าต้องการ "ล้างยอดขายวันนี้" ทั้งหมด (${todayOrders.length} รายการ)?\nการดำเนินการนี้จะลบรายการสั่งซื้อวันนี้ที่ชำระเงินแล้วออกจากระบบ!`)) {
     for (let o of todayOrders) {
-      await dbDelete('uwu_orders', o.id);
+      await dbDelete('star_orders', o.id);
     }
     alert('🟢 ล้างยอดขายของวันนี้เรียบร้อยแล้ว');
     refreshAll();
@@ -372,7 +365,7 @@ async function resetAllOrderStats() {
 
   if (confirm(`⚠️ ยืนยันการ "รีเซ็ตสถิติขายดีทั้งหมด"?\nระบบจะทำการลบประวัติออเดอร์ที่จบงานแล้วทั้งหมด (${paidOrders.length} รายการ)`)) {
     for (let o of paidOrders) {
-      await dbDelete('uwu_orders', o.id);
+      await dbDelete('star_orders', o.id);
     }
     alert('🟢 รีเซ็ตสถิติขายดีทั้งหมดเรียบร้อยแล้ว');
     refreshAll();
@@ -394,10 +387,10 @@ async function dbUpdate(table,id,row){if(!sb){let a=await dbGet(table);a=a.map(x
 async function dbDelete(table,id){if(!sb){let a=await dbGet(table);a=a.filter(x=>x.id!==id);localStorage.setItem('77_'+table,JSON.stringify(a));return true}let {error}=await sb.from(table).delete().eq('id',id);if(error){alert(error.message);return false}return true}
 
 async function refreshAll(){
-  tables = await dbGet('uwu_tables'); 
-  menus = await dbGet('uwu_menus'); 
-  orders = await dbGet('uwu_orders');
-  staffList = await dbGet('uwu_staff');
+  tables = await dbGet('star_tables'); 
+  menus = await dbGet('star_menus'); 
+  orders = await dbGet('star_orders');
+  staffList = await dbGet('star_staff');
   
   await loadStaffList();
   renderStaff();
@@ -431,11 +424,11 @@ async function clockInOut(type){
     total: 0,
     status: 'CLOCK_LOG'
   };
-  const res = await dbInsert('uwu_orders', row);
+  const res = await dbInsert('star_orders', row);
   
   const staffMember = staffList.find(s => s.name === name);
   if (staffMember) {
-    await dbUpdate('uwu_staff', staffMember.id, { 
+    await dbUpdate('star_staff', staffMember.id, { 
       attendance: type, 
       attendance_time: now.toLocaleString('th-TH') 
     });
@@ -444,7 +437,6 @@ async function clockInOut(type){
   if(res) {
     alert(`บันทึกเวลา "${type}" สำหรับ ${name} เรียบร้อยแล้ว`);
     
-    // แจ้งเตือนเข้า Discord
     sendDiscordWebhook({
       title: type === 'เข้าเวร' ? '🟢 พนักงานเข้าเวร' : '🔴 พนักงานออกเวร',
       color: type === 'เข้าเวร' ? 0x79e2a7 : 0xff7d91,
@@ -608,7 +600,7 @@ function renderWorkHoursSummary(logs) {
 
 async function deleteClockLog(id){
   if(confirm('คุณต้องการลบรายการบันทึกเวลานี้ใช่หรือไม่?')){
-    await dbDelete('uwu_orders', id);
+    await dbDelete('star_orders', id);
     refreshAll();
   }
 }
@@ -616,7 +608,7 @@ async function deleteClockLog(id){
 async function deleteDayWorkLog(dateKey, name, ids){
   if(confirm(`ต้องการลบประวัติการเข้า-ออกเวรของ "${name}" ในวันที่ ${dateKey} ทั้งหมดใช่หรือไม่?`)){
     for(let id of ids){
-      await dbDelete('uwu_orders', id);
+      await dbDelete('star_orders', id);
     }
     refreshAll();
   }
@@ -638,7 +630,7 @@ function openStaffModal(){
 async function addStaff(){
   const name = document.getElementById('newStaffName').value.trim();
   if(!name) return;
-  await dbInsert('uwu_staff', {
+  await dbInsert('star_staff', {
     name: name,
     role: 'พนักงานเสิร์ฟ',
     status: 'กำลังทำงาน',
@@ -650,7 +642,7 @@ async function addStaff(){
 }
 
 async function removeStaff(id){
-  await dbDelete('uwu_staff', id);
+  await dbDelete('star_staff', id);
   await refreshAll();
   openStaffModal();
 }
@@ -790,11 +782,10 @@ async function saveDailySettlement(){
     status: 'DAILY_SETTLEMENT'
   };
 
-  const res = await dbInsert('uwu_orders', row);
+  const res = await dbInsert('star_orders', row);
   if(res){
     alert('บันทึกปิดยอดขายประจำวันสำเร็จเรียบร้อยแล้ว!');
 
-    // แจ้งเตือนเข้า Discord
     sendDiscordWebhook({
       title: '📊 บันทึกปิดยอดขายประจำวัน (Daily Settlement)',
       color: 0xd77cf5,
@@ -886,7 +877,7 @@ function viewSettlementDetail(id){
 
 async function deleteSettlement(id){
   if(confirm('คุณต้องการลบประวัติการปิดยอดรายการนี้ใช่หรือไม่?')){
-    await dbDelete('uwu_orders', id);
+    await dbDelete('star_orders', id);
     refreshAll();
   }
 }
@@ -978,12 +969,11 @@ async function saveOrder(){
   let old=orders.find(x=>x.table_id===currentOrder.table_id&&x.status!=='จบงาน'&&x.status!=='CLOCK_LOG'&&x.status!=='STAFF_LIST'&&x.status!=='DAILY_SETTLEMENT'&&x.status!=='MANAGER_PWD');
   let row={table_id:currentOrder.table_id,items:JSON.stringify(currentOrder.items),total:total(),status:old?old.status:'รออาหาร'};
   
-  if(old) await dbUpdate('uwu_orders',old.id,row);
-  else await dbInsert('uwu_orders',row);
+  if(old) await dbUpdate('star_orders',old.id,row);
+  else await dbInsert('star_orders',row);
   
   alert('บันทึกออเดอร์แล้ว');
 
-  // แจ้งเตือนออเดอร์ใหม่เข้า Discord
   const tName = tableName(currentOrder.table_id);
   const itemListText = currentOrder.items.map(it => `• ${it.name} x${it.qty} (${money(it.price * it.qty)})`).join('\n');
   
@@ -1004,13 +994,13 @@ async function saveOrder(){
 }
 
 async function changeStatus(id){let o=orders.find(x=>x.id===id);let html=`<h3>เปลี่ยนสถานะ — ${tableName(o.table_id)}</h3><div class="field"><select id="newStatus">${statuses.map(s=>`<option ${s===o.status?'selected':''}>${s}</option>`).join('')}</select></div><div class="actions"><button class="btn" onclick="closeModal()">ยกเลิก</button><button class="primary" onclick="saveStatus(${id})">บันทึก</button></div>`;showModal(html)}
-async function saveStatus(id){await dbUpdate('uwu_orders',id,{status:document.getElementById('newStatus').value});closeModal();refreshAll()}
-async function deleteOrder(id){if(confirm('ลบออเดอร์นี้ใช่หรือไม่?')){await dbDelete('uwu_orders',id);refreshAll()}}
+async function saveStatus(id){await dbUpdate('star_orders',id,{status:document.getElementById('newStatus').value});closeModal();refreshAll()}
+async function deleteOrder(id){if(confirm('ลบออเดอร์นี้ใช่หรือไม่?')){await dbDelete('star_orders',id);refreshAll()}}
 async function openTableModal(){showModal(`<h3>เพิ่มโต๊ะ</h3><div class="field"><label>ชื่อโต๊ะ</label><input id="tableName" placeholder="เช่น โต๊ะ 1"></div><div class="actions"><button class="btn" onclick="closeModal()">ยกเลิก</button><button class="primary" onclick="addTable()">เพิ่ม</button></div>`)}
-async function addTable(){let n=document.getElementById('tableName').value.trim();if(!n)return;await dbInsert('uwu_tables',{name:n});closeModal();refreshAll()}
+async function addTable(){let n=document.getElementById('tableName').value.trim();if(!n)return;await dbInsert('star_tables',{name:n});closeModal();refreshAll()}
 async function renameTable(id){let t=tables.find(x=>x.id===id);showModal(`<h3>แก้ชื่อโต๊ะ</h3><div class="field"><input id="tableName" value="${esc(t.name)}"></div><div class="actions"><button class="btn" onclick="closeModal()">ยกเลิก</button><button class="primary" onclick="saveTable(${id})">บันทึก</button></div>`)}
-async function saveTable(id){await dbUpdate('uwu_tables',id,{name:document.getElementById('tableName').value.trim()});closeModal();refreshAll()}
-async function deleteTable(id){if(orders.some(o=>o.table_id===id)){alert('โต๊ะนี้มีออเดอร์อยู่ ลบออเดอร์ก่อน');return}if(confirm('ลบโต๊ะนี้ใช่หรือไม่?')){await dbDelete('uwu_tables',id);refreshAll()}}
+async function saveTable(id){await dbUpdate('star_tables',id,{name:document.getElementById('tableName').value.trim()});closeModal();refreshAll()}
+async function deleteTable(id){if(orders.some(o=>o.table_id===id)){alert('โต๊ะนี้มีออเดอร์อยู่ ลบออเดอร์ก่อน');return}if(confirm('ลบโต๊ะนี้ใช่หรือไม่?')){await dbDelete('star_tables',id);refreshAll()}}
 
 async function openMenuModal(m=null){
   const parsed = m ? parseMenuDesc(m.description) : { img: '', desc: '', cat: '', icon: '' };
@@ -1037,7 +1027,7 @@ async function addMenu(){
   if(!n||!p)return alert('กรอกชื่อและราคา');
   
   let fullDesc = JSON.stringify({ image: img, desc: d, cat: cat || "ทั่วไป", icon: "🍽️" });
-  await dbInsert('uwu_menus',{name:n,price:p,description:fullDesc});
+  await dbInsert('star_menus',{name:n,price:p,description:fullDesc});
   closeModal();refreshAll();
 }
 async function saveMenu(id){
@@ -1048,10 +1038,10 @@ async function saveMenu(id){
       d=document.getElementById('menuDesc').value.trim();
       
   let fullDesc = JSON.stringify({ image: img, desc: d, cat: cat || "ทั่วไป", icon: "🍽️" });
-  await dbUpdate('uwu_menus',id,{name:n,price:p,description:fullDesc});
+  await dbUpdate('star_menus',id,{name:n,price:p,description:fullDesc});
   closeModal();refreshAll();
 }
-async function deleteMenu(id){if(confirm('ลบเมนูนี้ใช่หรือไม่?')){await dbDelete('uwu_menus',id);refreshAll()}}
+async function deleteMenu(id){if(confirm('ลบเมนูนี้ใช่หรือไม่?')){await dbDelete('star_menus',id);refreshAll()}}
 function showModal(h){document.getElementById('modalBox').innerHTML=h;document.getElementById('modal').classList.remove('hidden')}
 function closeModal(){document.getElementById('modal').classList.add('hidden')}
 function money(n){return Number(n||0).toLocaleString('th-TH',{minimumFractionDigits:2})+' ฿'}
