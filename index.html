@@ -85,6 +85,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer;border:0;border-
     <button class="primary" onclick="openTableModal()">＋ เพิ่มโต๊ะ</button>
     <button class="primary" onclick="openMenuModal()">＋ เพิ่มเมนู</button>
     <button class="primary" style="background:#8b5cf6; color:#fff" onclick="openStaffModal()">＋ จัดการรายชื่อพนักงาน</button>
+    <button class="btn" style="background:#374151;" onclick="openChangePasswordModal()">🔒 เปลี่ยนรหัสผ่านผู้จัดการ</button>
   </div>
   
   <div class="dashboard">
@@ -96,9 +97,10 @@ button,input,select,textarea{font:inherit}button{cursor:pointer;border:0;border-
       <span>📊 จำนวนออเดอร์ที่ชำระแล้ว</span>
       <strong id="todayOrderCount" style="color:#fff">0 ออเดอร์</strong>
     </div>
-    <div style="display:flex; gap:10px; width:100%; margin-top:10px;">
+    <div style="display:flex; gap:10px; width:100%; margin-top:10px; flex-wrap:wrap;">
       <button class="primary" style="flex:1;" onclick="viewTodaySoldItems()">🔍 ดูรายการที่ขายได้วันนี้</button>
       <button class="success" style="flex:1;" onclick="saveDailySettlement()">💾 บันทึกปิดยอดขายวันนี้</button>
+      <button class="danger" style="flex:1;" onclick="resetTodaySales()">🗑️ ล้างยอดขายวันนี้</button>
     </div>
   </div>
 
@@ -188,6 +190,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer;border:0;border-
   <div style="margin-bottom:25px">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
       <h3 style="margin:0">🔥 เมนูขายดี (สถิติรวมทั้งหมด)</h3>
+      <button class="danger" style="font-size:12px; padding:6px 12px;" onclick="resetAllOrderStats()">🗑️ รีเซ็ตสถิติขายดีทั้งหมด</button>
     </div>
     <div class="card tableScrollBox">
       <table>
@@ -250,13 +253,108 @@ function parseMenuDesc(descText) {
   return { img: '', desc: descText };
 }
 
-function enterRole(r){
+// ----------------------------------------------------
+// ระบบยืนยันรหัสผ่านเข้าหน้าผู้จัดการ (Role Access Control)
+// ----------------------------------------------------
+async function getManagerPassword() {
+  const pwdLogs = orders.filter(o => o.status === 'MANAGER_PWD');
+  if (pwdLogs.length > 0) {
+    try {
+      const latest = pwdLogs[pwdLogs.length - 1];
+      const parsed = JSON.parse(latest.items || '{}');
+      if (parsed.password) return parsed.password;
+    } catch(e){}
+  }
+  return localStorage.getItem('77_manager_pwd') || '9999'; // รหัสเริ่มต้นคือ 1234
+}
+
+async function enterRole(r){
+  if (r === 'manager') {
+    const currentPwd = await getManagerPassword();
+    const inputPwd = prompt('🔑 กรุณากรอกรหัสผ่านผู้จัดการร้าน:');
+    if (inputPwd === null) return; // กดยกเลิก
+    if (inputPwd !== currentPwd) {
+      alert('❌ รหัสผ่านไม่ถูกต้อง! ไม่สามารถเข้าสู่ระบบผู้จัดการได้');
+      return;
+    }
+  }
+
   role=r; 
   document.getElementById('rolePage').classList.add('hidden'); 
   document.getElementById(r==='staff'?'staffPage':'managerPage').classList.remove('hidden'); 
   document.getElementById('homeBtn').classList.remove('hidden'); 
   document.getElementById('modeText').textContent=r==='staff'?'โหมดพนักงาน':'โหมดผู้จัดการ'; 
   refreshAll();
+}
+
+function openChangePasswordModal() {
+  showModal(`
+    <h3>🔒 เปลี่ยนรหัสผ่านผู้จัดการ</h3>
+    <div class="field"><label>รหัสผ่านเดิม</label><input type="password" id="oldPwd" placeholder="กรอกรหัสผ่านเดิม"></div>
+    <div class="field"><label>รหัสผ่านใหม่</label><input type="password" id="newPwd" placeholder="กรอกรหัสผ่านใหม่"></div>
+    <div class="actions" style="margin-top:15px">
+      <button class="btn" onclick="closeModal()">ยกเลิก</button>
+      <button class="primary" onclick="saveNewPassword()">บันทึกรหัสผ่านใหม่</button>
+    </div>
+  `);
+}
+
+async function saveNewPassword() {
+  const oldPwdInput = document.getElementById('oldPwd').value;
+  const newPwdInput = document.getElementById('newPwd').value.trim();
+  const currentPwd = await getManagerPassword();
+
+  if (oldPwdInput !== currentPwd) {
+    return alert('❌ รหัสผ่านเดิมไม่ถูกต้อง');
+  }
+  if (!newPwdInput) {
+    return alert('⚠️ กรุณากรอกรหัสผ่านใหม่');
+  }
+
+  const row = {
+    table_id: null,
+    items: JSON.stringify({ password: newPwdInput }),
+    total: 0,
+    status: 'MANAGER_PWD'
+  };
+
+  await dbInsert('orders', row);
+  localStorage.setItem('77_manager_pwd', newPwdInput);
+  alert('🟢 เปลี่ยนรหัสผ่านสำเร็จ!');
+  closeModal();
+}
+
+// ----------------------------------------------------
+// ระบบลบสถิติ/ยอดขาย
+// ----------------------------------------------------
+async function resetTodaySales() {
+  const todayOrders = getTodayPaidOrders();
+  if (todayOrders.length === 0) {
+    return alert('ไม่มีรายการยอดขายของวันนี้ให้ลบ');
+  }
+
+  if (confirm(`⚠️ คุณแน่ใจหรือไม่ว่าต้องการ "ล้างยอดขายวันนี้" ทั้งหมด (${todayOrders.length} รายการ)?\nการดำเนินการนี้จะลบรายการสั่งซื้อวันนี้ที่ชำระเงินแล้วออกจากระบบ!`)) {
+    for (let o of todayOrders) {
+      await dbDelete('orders', o.id);
+    }
+    alert('🟢 ล้างยอดขายของวันนี้เรียบร้อยแล้ว');
+    refreshAll();
+  }
+}
+
+async function resetAllOrderStats() {
+  const paidOrders = orders.filter(o => o.status === 'ชำระเงินแล้ว' || o.status === 'จบงาน');
+  if (paidOrders.length === 0) {
+    return alert('ไม่มีสถิติออเดอร์ให้รีเซ็ต');
+  }
+
+  if (confirm(`⚠️ ยืนยันการ "รีเซ็ตสถิติขายดีทั้งหมด"?\nระบบจะทำการลบประวัติออเดอร์ที่จบงานแล้วทั้งหมด (${paidOrders.length} รายการ)`)) {
+    for (let o of paidOrders) {
+      await dbDelete('orders', o.id);
+    }
+    alert('🟢 รีเซ็ตสถิติขายดีทั้งหมดเรียบร้อยแล้ว');
+    refreshAll();
+  }
 }
 
 document.getElementById('homeBtn').onclick=()=>{
@@ -520,7 +618,6 @@ async function removeStaff(index){
   openStaffModal();
 }
 
-// คำนวณออเดอร์ของวันนี้ที่ชำระเงินแล้ว
 function getTodayPaidOrders(){
   const todayStr = new Date().toDateString();
   return orders.filter(o => {
@@ -540,7 +637,6 @@ function calculateTodaySales(){
   if(countEl) countEl.textContent = todayOrders.length + ' ออเดอร์';
 }
 
-// ฟังก์ชันคำนวณว่า "วันนี้ขายอะไรไปบ้าง"
 function getTodaySoldItemsData(){
   const todayOrders = getTodayPaidOrders();
   const itemStats = {};
@@ -570,7 +666,6 @@ function getTodaySoldItemsData(){
   })).sort((a,b) => b.qty - a.qty);
 }
 
-// แสดงตารางรายการสินค้าขายดี/ขายได้ในวันนี้
 function renderTodaySoldItems(){
   const el = document.getElementById('todaySoldItemsList');
   if(!el) return;
@@ -592,7 +687,6 @@ function renderTodaySoldItems(){
   `).join('');
 }
 
-// เปิด Modal ดูรายการสินค้าที่ขายได้วันนี้แบบละเอียด
 function viewTodaySoldItems(){
   const soldItems = getTodaySoldItemsData();
   const todayOrders = getTodayPaidOrders();
@@ -632,7 +726,6 @@ function viewTodaySoldItems(){
   showModal(html);
 }
 
-// ฟังก์ชันกด "บันทึกปิดยอดขายประจำวัน"
 async function saveDailySettlement(){
   const todayOrders = getTodayPaidOrders();
   const totalSales = todayOrders.reduce((sum, o) => sum + Number(o.total || 0), 0);
@@ -667,7 +760,6 @@ async function saveDailySettlement(){
   }
 }
 
-// แสดงตารางสรุปประวัติการปิดยอดขายรายวัน
 function renderDailySummary(){
   const listEl = document.getElementById('dailySalesList');
   if(!listEl) return;
@@ -705,7 +797,6 @@ function renderDailySummary(){
   `).join('');
 }
 
-// ดูเมนูที่ขายได้ย้อนหลังจากการปิดยอด
 function viewSettlementDetail(id){
   const order = orders.find(o => o.id === id);
   if(!order) return;
@@ -805,21 +896,21 @@ function renderStaff(){
  const el=document.getElementById('staffTables'); if(!el)return;
  if(!tables.length){el.innerHTML='<div class="empty">ยังไม่มีโต๊ะ ให้ผู้จัดการเพิ่มโต๊ะก่อน</div>';return}
  el.innerHTML=tables.map(t=>{
-    const o=orders.find(x=>x.table_id===t.id && x.status!=='จบงาน' && x.status!=='CLOCK_LOG' && x.status!=='STAFF_LIST' && x.status!=='DAILY_SETTLEMENT');
+    const o=orders.find(x=>x.table_id===t.id && x.status!=='จบงาน' && x.status!=='CLOCK_LOG' && x.status!=='STAFF_LIST' && x.status!=='DAILY_SETTLEMENT' && x.status!=='MANAGER_PWD');
     return `<div class="card tableCard"><h3>${esc(t.name)}</h3>${o?statusClass(o.status):'<span class="status">ว่าง</span>'}<div class="muted" style="margin-top:8px">${o?'ยอด '+money(o.total):'ยังไม่มีออเดอร์'}</div><div class="actions"><button class="primary" onclick="startTable(${t.id})">${o?'แก้ไขออเดอร์':'รับออเดอร์'}</button>${o?`<button class="btn" onclick="changeStatus(${o.id})">เปลี่ยนสถานะ</button>`:''}</div></div>`
  }).join('');
 }
 
 function renderManager(){
  const te=document.getElementById('managerTables'), me=document.getElementById('managerMenus'); if(!te)return;
- te.innerHTML=tables.length?tables.map(t=>{let o=orders.find(x=>x.table_id===t.id&&x.status!=='จบงาน'&&x.status!=='CLOCK_LOG'&&x.status!=='STAFF_LIST'&&x.status!=='DAILY_SETTLEMENT');return `<div class="card"><h3>${esc(t.name)}</h3>${o?`<div>${statusClass(o.status)}<br><b>${money(o.total)}</b></div><div class="actions"><button class="btn" onclick="changeStatus(${o.id})">สถานะ</button><button class="danger" onclick="deleteOrder(${o.id})">ลบออเดอร์</button></div>`:'<div class="muted">ว่าง</div>'}<div class="actions"><button class="btn" onclick="renameTable(${t.id})">แก้ชื่อ</button><button class="danger" onclick="deleteTable(${t.id})">ลบโต๊ะ</button></div></div>`}).join(''):'<div class="empty">ยังไม่มีโต๊ะ</div>';
+ te.innerHTML=tables.length?tables.map(t=>{let o=orders.find(x=>x.table_id===t.id&&x.status!=='จบงาน'&&x.status!=='CLOCK_LOG'&&x.status!=='STAFF_LIST'&&x.status!=='DAILY_SETTLEMENT'&&x.status!=='MANAGER_PWD');return `<div class="card"><h3>${esc(t.name)}</h3>${o?`<div>${statusClass(o.status)}<br><b>${money(o.total)}</b></div><div class="actions"><button class="btn" onclick="changeStatus(${o.id})">สถานะ</button><button class="danger" onclick="deleteOrder(${o.id})">ลบออเดอร์</button></div>`:'<div class="muted">ว่าง</div>'}<div class="actions"><button class="btn" onclick="renameTable(${t.id})">แก้ชื่อ</button><button class="danger" onclick="deleteTable(${t.id})">ลบโต๊ะ</button></div></div>`}).join(''):'<div class="empty">ยังไม่มีโต๊ะ</div>';
  me.innerHTML=menus.length?menus.map(m=>{
     const parsed = parseMenuDesc(m.description);
     return `<div class="menuItem"><div style="display:flex; gap:12px; align-items:center">${parsed.img?`<img src="${esc(parsed.img)}" class="menuThumb" onerror="this.style.display='none'">`:''}<div><b>${esc(m.name)}</b><div class="muted">${esc(parsed.desc||'')}</div></div></div><div class="row"><span class="price">${money(m.price)}</span><button class="btn" onclick="editMenu(${m.id})">แก้</button><button class="danger" onclick="deleteMenu(${m.id})">ลบ</button></div></div>`
  }).join(''):'<div class="empty">ยังไม่มีเมนู</div>';
 }
 
-function startTable(id){currentOrder={table_id:id,items:[]};let old=orders.find(x=>x.table_id===id&&x.status!=='จบงาน'&&x.status!=='CLOCK_LOG'&&x.status!=='STAFF_LIST'&&x.status!=='DAILY_SETTLEMENT');if(old)try{currentOrder.items=JSON.parse(old.items||'[]')}catch{};renderOrder();document.getElementById('staffOrder').scrollIntoView({behavior:'smooth'})}
+function startTable(id){currentOrder={table_id:id,items:[]};let old=orders.find(x=>x.table_id===id&&x.status!=='จบงาน'&&x.status!=='CLOCK_LOG'&&x.status!=='STAFF_LIST'&&x.status!=='DAILY_SETTLEMENT'&&x.status!=='MANAGER_PWD');if(old)try{currentOrder.items=JSON.parse(old.items||'[]')}catch{};renderOrder();document.getElementById('staffOrder').scrollIntoView({behavior:'smooth'})}
 function openOrder(){if(!tables.length){alert('ยังไม่มีโต๊ะ');return}startTable(tables[0].id)}
 function renderOrder(){
  const p=document.getElementById('staffOrder');p.classList.remove('hidden');
@@ -831,7 +922,7 @@ function renderOrder(){
 function addItem(id){let m=menus.find(x=>x.id===id),it=currentOrder.items.find(x=>x.menu_id===id);if(it)it.qty++;else currentOrder.items.push({menu_id:id,name:m.name,price:Number(m.price),qty:1});renderOrder()}
 function qty(i,d){currentOrder.items[i].qty+=d;if(currentOrder.items[i].qty<=0)currentOrder.items.splice(i,1);renderOrder()}
 function total(){return currentOrder.items.reduce((s,x)=>s+x.price*x.qty,0)}
-async function saveOrder(){if(!currentOrder.items.length){alert('กรุณาเลือกเมนูก่อน');return}let old=orders.find(x=>x.table_id===currentOrder.table_id&&x.status!=='จบงาน'&&x.status!=='CLOCK_LOG'&&x.status!=='STAFF_LIST'&&x.status!=='DAILY_SETTLEMENT');let row={table_id:currentOrder.table_id,items:JSON.stringify(currentOrder.items),total:total(),status:old?old.status:'รออาหาร'};if(old)await dbUpdate('orders',old.id,row);else await dbInsert('orders',row);alert('บันทึกออเดอร์แล้ว');await refreshAll();document.getElementById('staffOrder').classList.add('hidden')}
+async function saveOrder(){if(!currentOrder.items.length){alert('กรุณาเลือกเมนูก่อน');return}let old=orders.find(x=>x.table_id===currentOrder.table_id&&x.status!=='จบงาน'&&x.status!=='CLOCK_LOG'&&x.status!=='STAFF_LIST'&&x.status!=='DAILY_SETTLEMENT'&&x.status!=='MANAGER_PWD');let row={table_id:currentOrder.table_id,items:JSON.stringify(currentOrder.items),total:total(),status:old?old.status:'รออาหาร'};if(old)await dbUpdate('orders',old.id,row);else await dbInsert('orders',row);alert('บันทึกออเดอร์แล้ว');await refreshAll();document.getElementById('staffOrder').classList.add('hidden')}
 
 async function changeStatus(id){let o=orders.find(x=>x.id===id);let html=`<h3>เปลี่ยนสถานะ — ${tableName(o.table_id)}</h3><div class="field"><select id="newStatus">${statuses.map(s=>`<option ${s===o.status?'selected':''}>${s}</option>`).join('')}</select></div><div class="actions"><button class="btn" onclick="closeModal()">ยกเลิก</button><button class="primary" onclick="saveStatus(${id})">บันทึก</button></div>`;showModal(html)}
 async function saveStatus(id){await dbUpdate('orders',id,{status:document.getElementById('newStatus').value});closeModal();refreshAll()}
