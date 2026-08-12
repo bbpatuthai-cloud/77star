@@ -58,7 +58,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer;border:0;border-
     <!-- แสดงประวัติลงเวลาเรียลไทม์ในหน้าพนักงาน -->
     <div style="margin-top:15px; border-top:1px solid var(--line); padding-top:10px">
       <div style="display:flex; justify-content:space-between; align-items:center;">
-        <small style="color:var(--muted)" id="staffLogTitle">ประวัติการเข้า-ออกเวรทั้งหมด:</small>
+        <small style="color:var(--muted)" id="staffLogTitle">ประวัติการเข้า-ออกเวรล่าสุด:</small>
       </div>
       <div id="staffAttendanceLog" style="max-height:160px; overflow-y:auto; margin-top:5px; font-size:13px"></div>
     </div>
@@ -227,7 +227,6 @@ async function refreshAll(){
   renderStaff();renderManager();calculateTodaySales();renderDailySummary();renderTopItems();renderAttendanceList();
 }
 
-// โหลดและซิงก์รายชื่อพนักงานแบบ Realtime ผ่าน Supabase Data
 async function loadStaffList(){
   const staffLogs = orders.filter(o => o.status === 'STAFF_LIST');
   let currentStaffList = [];
@@ -238,7 +237,6 @@ async function loadStaffList(){
       currentStaffList = JSON.parse(latest.items || '[]');
     } catch(e) {}
   } else {
-    // ถ้ายังไม่มีข้อมูลใน DB ให้ใช้ข้อมูลเริ่มต้น
     currentStaffList = ['พนักงาน 1', 'พนักงาน 2'];
   }
   
@@ -253,23 +251,25 @@ async function loadStaffList(){
   }
 }
 
-// บันทึกการลงเวลาเข้า-ออกเวร Realtime
 async function clockInOut(type){
   const name = document.getElementById('staffNameSelect').value;
   if(!name) return alert('กรุณาเลือกชื่อพนักงานก่อนครับ');
 
   const nowStr = new Date().toLocaleString('th-TH');
   
+  // ใช้ table_id: null เพื่อไม่ให้ขัดกับ Foreign Key Constraint
   const row = {
-    table_id: 0,
+    table_id: null,
     items: JSON.stringify([{ staff_name: name, clock_type: type, clock_time: nowStr }]),
     total: 0,
     status: 'CLOCK_LOG'
   };
 
-  await dbInsert('orders', row);
-  alert(`บันทึกเวลา "${type}" สำหรับ ${name} เรียบร้อยแล้ว`);
-  refreshAll();
+  const res = await dbInsert('orders', row);
+  if(res) {
+    alert(`บันทึกเวลา "${type}" สำหรับ ${name} เรียบร้อยแล้ว`);
+    refreshAll();
+  }
 }
 
 function filterMyAttendance(){
@@ -294,7 +294,6 @@ function renderAttendanceList(){
     } catch(e){ return null; }
   }).filter(Boolean).reverse();
 
-  // 1. แสดงในหน้าผู้จัดการ (แสดงทั้งหมด)
   if(mgrListEl){
     if(!logs.length){
       mgrListEl.innerHTML = '<tr><td colspan="3" class="empty" style="border:none">ยังไม่มีประวัติการบันทึกเวลา</td></tr>';
@@ -309,7 +308,6 @@ function renderAttendanceList(){
     }
   }
 
-  // 2. แสดงในหน้าพนักงาน (กรองเฉพาะคนทีเลือก หรือแสดงทั้งหมดถ้ายังไม่ได้เลือก)
   if(staffLogEl){
     let filteredLogs = logs;
     if (selectedStaff) {
@@ -345,10 +343,10 @@ function openStaffModal(){
   `);
 }
 
-// อัปเดตรายชื่อพนักงานลง Supabase Database Realtime
 async function saveStaffListToDb(newList) {
+  // ใช้ table_id: null เพื่อไม่ให้ขัดกับ Foreign Key Constraint
   const row = {
-    table_id: 0,
+    table_id: null,
     items: JSON.stringify(newList),
     total: 0,
     status: 'STAFF_LIST'
