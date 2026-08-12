@@ -37,22 +37,28 @@ button,input,select,textarea{font:inherit}button{cursor:pointer;border:0;border-
 <main class="wrap">
 <section id="rolePage">
   <div class="roleGrid">
-    <div class="role"><div style="font-size:55px">👨‍🍳</div><h2>พนักงาน</h2><p>รับออเดอร์ ลงเวลาเข้า-ออกเวร และอัปเดตสถานะ</p><button onclick="enterRole('staff')">เข้าหน้าพนักงาน</button></div>
-    <div class="role"><div style="font-size:55px">👑</div><h2>ผู้จัดการ</h2><p>จัดการโต๊ะ เมนู พนักงาน เช็กเวลาทำงาน และดูยอดขาย</p><button onclick="enterRole('manager')">เข้าหน้าผู้จัดการ</button></div>
+    <div class="role"><div style="font-size:55px">👨‍🍳</div><h2>พนักงาน</h2><p>รับออเดอร์ ลงเวลาเข้า-ออกเวรเรียลไทม์ และอัปเดตสถานะ</p><button onclick="enterRole('staff')">เข้าหน้าพนักงาน</button></div>
+    <div class="role"><div style="font-size:55px">👑</div><h2>ผู้จัดการ</h2><p>จัดการโต๊ะ เมนู พนักงาน เช็กเวลาทำงานเรียลไทม์ และดูยอดขาย</p><button onclick="enterRole('manager')">เข้าหน้าผู้จัดการ</button></div>
   </div>
 </section>
 
 <!-- หน้าพนักงาน -->
 <section id="staffPage" class="hidden">
-  <!-- ส่วนเช็กชื่อเข้า-ออกเวร -->
+  <!-- ส่วนเช็กชื่อเข้า-ออกเวร Realtime -->
   <div class="card" style="margin-bottom:20px; border:1px solid var(--pink)">
-    <h3 style="margin-top:0">⏰ บันทึกเวลาเข้า-ออกเวรพนักงาน</h3>
+    <h3 style="margin-top:0">⏰ บันทึกเวลาเข้า-ออกเวรพนักงาน (Realtime)</h3>
     <div class="row">
       <div class="field" style="flex:1; min-width:200px; margin:0">
         <select id="staffNameSelect"><option value="">-- เลือกชื่อพนักงาน --</option></select>
       </div>
       <button class="success" onclick="clockInOut('เข้าเวร')">🟢 เข้าเวร</button>
       <button class="danger" onclick="clockInOut('ออกเวร')">🔴 ออกเวร</button>
+    </div>
+    
+    <!-- แสดงประวัติลงเวลาเรียลไทม์ในหน้าพนักงาน -->
+    <div style="margin-top:15px; border-top:1px solid var(--line); padding-top:10px">
+      <small style="color:var(--muted)">ประวัติการเข้า-ออกเวรล่าสุด:</small>
+      <div id="staffAttendanceLog" style="max-height:120px; overflow-y:auto; margin-top:5px; font-size:13px"></div>
     </div>
   </div>
 
@@ -85,11 +91,11 @@ button,input,select,textarea{font:inherit}button{cursor:pointer;border:0;border-
     </div>
   </div>
 
-  <!-- ส่วนแสดงตารางประวัติเวลาทำงานพนักงาน -->
+  <!-- ส่วนแสดงตารางประวัติเวลาทำงานพนักงาน Realtime -->
   <div style="margin-bottom:25px">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
-      <h3 style="margin:0">🕒 บันทึกเวลาเข้า-ออกเวรพนักงาน</h3>
-      <button class="btn" onclick="renderAttendanceList()">↻ รีเฟรชประวัติ</button>
+      <h3 style="margin:0">🕒 บันทึกเวลาเข้า-ออกเวรพนักงาน (Realtime)</h3>
+      <button class="btn" onclick="refreshAll()">↻ รีเฟรช</button>
     </div>
     <div class="card" style="overflow-x:auto">
       <table style="width:100%; text-align:left; border-collapse:collapse;">
@@ -161,13 +167,14 @@ window.SUPABASE_CONFIG = {
 </script>
 
 <script>
-let sb=null, role=null, tables=[], menus=[], orders=[], staffList=[], attendanceLogs=[], currentOrder={table_id:null,items:[]};
+let sb=null, role=null, tables=[], menus=[], orders=[], staffList=[], currentOrder={table_id:null,items:[]};
 const statuses=['ยังไม่ชำระเงิน','ชำระเงินแล้ว','รออาหาร','เสิร์ฟแล้ว','จบงาน'];
 const cfg=window.SUPABASE_CONFIG||{};
 
 if(cfg.url && cfg.publishableKey && window.supabase)
   sb=supabase.createClient(cfg.url,cfg.publishableKey);
 
+// Realtime Sync ผ่าน Supabase Channel
 if (sb) {
   sb.channel('77-star-realtime')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'tables' }, () => refreshAll())
@@ -214,54 +221,86 @@ async function dbDelete(table,id){if(!sb){let a=await dbGet(table);a=a.filter(x=
 
 async function refreshAll(){
   tables=await dbGet('tables'); menus=await dbGet('menus'); orders=await dbGet('orders');
-  loadStaffAndAttendance();
-  renderStaff();renderManager();calculateTodaySales();renderDailySummary();renderTopItems();
+  loadStaffList();
+  renderStaff();renderManager();calculateTodaySales();renderDailySummary();renderTopItems();renderAttendanceList();
 }
 
-// ระบบจัดการรายชื่อพนักงานและบันทึกเวลา
-function loadStaffAndAttendance(){
+function loadStaffList(){
   const staffData = localStorage.getItem('77_staff_list');
   staffList = staffData ? JSON.parse(staffData) : ['พนักงาน 1', 'พนักงาน 2'];
   
-  const logData = localStorage.getItem('77_attendance_logs');
-  attendanceLogs = logData ? JSON.parse(logData) : [];
-
-  // อัปเดตตัวเลือกชื่อพนักงานในหน้า staff
   const sel = document.getElementById('staffNameSelect');
   if(sel){
     sel.innerHTML = '<option value="">-- เลือกชื่อพนักงาน --</option>' + 
       staffList.map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join('');
   }
-  renderAttendanceList();
 }
 
-function clockInOut(type){
+// ระบบลงเวลาทำงาน Realtime (ฝากข้อมูลลงตาราง orders เพื่อไม่ต้องสร้างตารางใหม่)
+async function clockInOut(type){
   const name = document.getElementById('staffNameSelect').value;
   if(!name) return alert('กรุณาเลือกชื่อพนักงานก่อนครับ');
 
-  const now = new Date().toLocaleString('th-TH');
-  const log = { name, type, time: now };
-  attendanceLogs.unshift(log);
-  localStorage.setItem('77_attendance_logs', JSON.stringify(attendanceLogs));
+  const nowStr = new Date().toLocaleString('th-TH');
+  
+  // สร้างโครงสร้างเก็บเวลาแบบซ่อนในออเดอร์
+  const row = {
+    table_id: 0, // 0 หมายถึงข้อมูลลงเวลาพนักงาน
+    items: JSON.stringify([{ staff_name: name, clock_type: type, clock_time: nowStr }]),
+    total: 0,
+    status: 'CLOCK_LOG'
+  };
 
+  await dbInsert('orders', row);
   alert(`บันทึกเวลา "${type}" สำหรับ ${name} เรียบร้อยแล้ว`);
-  renderAttendanceList();
+  refreshAll();
 }
 
 function renderAttendanceList(){
-  const el = document.getElementById('attendanceList');
-  if(!el) return;
-  if(!attendanceLogs.length){
-    el.innerHTML = '<tr><td colspan="3" class="empty" style="border:none">ยังไม่มีประวัติการบันทึกเวลา</td></tr>';
-    return;
+  const mgrListEl = document.getElementById('attendanceList');
+  const staffLogEl = document.getElementById('staffAttendanceLog');
+  
+  // กรองเฉพาะออเดอร์ที่เป็นบันทึกเวลาพนักงาน
+  const logs = orders.filter(o => o.status === 'CLOCK_LOG').map(o => {
+    try {
+      const data = JSON.parse(o.items || '[]')[0] || {};
+      const timeDisplay = o.created_at ? new Date(o.created_at).toLocaleString('th-TH') : (data.clock_time || '');
+      return {
+        name: data.staff_name || 'ไม่ระบุชื่อ',
+        type: data.clock_type || 'เข้าเวร',
+        time: timeDisplay
+      };
+    } catch(e){ return null; }
+  }).filter(Boolean).reverse();
+
+  // 1. แสดงผลในหน้าผู้จัดการ
+  if(mgrListEl){
+    if(!logs.length){
+      mgrListEl.innerHTML = '<tr><td colspan="3" class="empty" style="border:none">ยังไม่มีประวัติการบันทึกเวลา</td></tr>';
+    } else {
+      mgrListEl.innerHTML = logs.slice(0, 15).map(l => `
+        <tr style="border-bottom:1px solid #281d2e">
+          <td style="padding:12px 10px; font-weight:bold">${esc(l.name)}</td>
+          <td style="padding:12px 10px"><span class="status" style="background:${l.type==='เข้าเวร'?'#173d2b':'#4b1824'}; color:${l.type==='เข้าเวร'?'var(--ok)':'var(--danger)'}">${esc(l.type)}</span></td>
+          <td style="padding:12px 10px; color:var(--muted)">${esc(l.time)}</td>
+        </tr>
+      `).join('');
+    }
   }
-  el.innerHTML = attendanceLogs.slice(0, 15).map(l => `
-    <tr style="border-bottom:1px solid #281d2e">
-      <td style="padding:12px 10px; font-weight:bold">${esc(l.name)}</td>
-      <td style="padding:12px 10px"><span class="status" style="background:${l.type==='เข้าเวร'?'#173d2b':'#4b1824'}; color:${l.type==='เข้าเวร'?'var(--ok)':'var(--danger)'}">${l.type}</span></td>
-      <td style="padding:12px 10px; color:var(--muted)">${esc(l.time)}</td>
-    </tr>
-  `).join('');
+
+  // 2. แสดงผลเรียลไทม์ในหน้าพนักงาน
+  if(staffLogEl){
+    if(!logs.length){
+      staffLogEl.innerHTML = '<span class="muted">ยังไม่มีประวัติการเข้า-ออกเวร</span>';
+    } else {
+      staffLogEl.innerHTML = logs.slice(0, 5).map(l => `
+        <div style="display:flex; justify-content:space-between; margin-bottom:4px">
+          <span><b>${esc(l.name)}</b> (${esc(l.type)})</span>
+          <span class="muted">${esc(l.time)}</span>
+        </div>
+      `).join('');
+    }
+  }
 }
 
 function openStaffModal(){
@@ -283,14 +322,14 @@ function addStaff(){
   staffList.push(name);
   localStorage.setItem('77_staff_list', JSON.stringify(staffList));
   openStaffModal();
-  loadStaffAndAttendance();
+  loadStaffList();
 }
 
 function removeStaff(index){
   staffList.splice(index, 1);
   localStorage.setItem('77_staff_list', JSON.stringify(staffList));
   openStaffModal();
-  loadStaffAndAttendance();
+  loadStaffList();
 }
 
 function calculateTodaySales(){
@@ -394,21 +433,21 @@ function renderStaff(){
  const el=document.getElementById('staffTables'); if(!el)return;
  if(!tables.length){el.innerHTML='<div class="empty">ยังไม่มีโต๊ะ ให้ผู้จัดการเพิ่มโต๊ะก่อน</div>';return}
  el.innerHTML=tables.map(t=>{
-   const o=orders.find(x=>x.table_id===t.id && x.status!=='จบงาน');
+   const o=orders.find(x=>x.table_id===t.id && x.status!=='จบงาน' && x.status!=='CLOCK_LOG');
    return `<div class="card tableCard"><h3>${esc(t.name)}</h3>${o?statusClass(o.status):'<span class="status">ว่าง</span>'}<div class="muted" style="margin-top:8px">${o?'ยอด '+money(o.total):'ยังไม่มีออเดอร์'}</div><div class="actions"><button class="primary" onclick="startTable(${t.id})">${o?'แก้ไขออเดอร์':'รับออเดอร์'}</button>${o?`<button class="btn" onclick="changeStatus(${o.id})">เปลี่ยนสถานะ</button>`:''}</div></div>`
  }).join('');
 }
 
 function renderManager(){
  const te=document.getElementById('managerTables'), me=document.getElementById('managerMenus'); if(!te)return;
- te.innerHTML=tables.length?tables.map(t=>{let o=orders.find(x=>x.table_id===t.id&&x.status!=='จบงาน');return `<div class="card"><h3>${esc(t.name)}</h3>${o?`<div>${statusClass(o.status)}<br><b>${money(o.total)}</b></div><div class="actions"><button class="btn" onclick="changeStatus(${o.id})">สถานะ</button><button class="danger" onclick="deleteOrder(${o.id})">ลบออเดอร์</button></div>`:'<div class="muted">ว่าง</div>'}<div class="actions"><button class="btn" onclick="renameTable(${t.id})">แก้ชื่อ</button><button class="danger" onclick="deleteTable(${t.id})">ลบโต๊ะ</button></div></div>`}).join(''):'<div class="empty">ยังไม่มีโต๊ะ</div>';
+ te.innerHTML=tables.length?tables.map(t=>{let o=orders.find(x=>x.table_id===t.id&&x.status!=='จบงาน'&&x.status!=='CLOCK_LOG');return `<div class="card"><h3>${esc(t.name)}</h3>${o?`<div>${statusClass(o.status)}<br><b>${money(o.total)}</b></div><div class="actions"><button class="btn" onclick="changeStatus(${o.id})">สถานะ</button><button class="danger" onclick="deleteOrder(${o.id})">ลบออเดอร์</button></div>`:'<div class="muted">ว่าง</div>'}<div class="actions"><button class="btn" onclick="renameTable(${t.id})">แก้ชื่อ</button><button class="danger" onclick="deleteTable(${t.id})">ลบโต๊ะ</button></div></div>`}).join(''):'<div class="empty">ยังไม่มีโต๊ะ</div>';
  me.innerHTML=menus.length?menus.map(m=>{
    const parsed = parseMenuDesc(m.description);
    return `<div class="menuItem"><div style="display:flex; gap:12px; align-items:center">${parsed.img?`<img src="${esc(parsed.img)}" class="menuThumb" onerror="this.style.display='none'">`:''}<div><b>${esc(m.name)}</b><div class="muted">${esc(parsed.desc||'')}</div></div></div><div class="row"><span class="price">${money(m.price)}</span><button class="btn" onclick="editMenu(${m.id})">แก้</button><button class="danger" onclick="deleteMenu(${m.id})">ลบ</button></div></div>`
  }).join(''):'<div class="empty">ยังไม่มีเมนู</div>';
 }
 
-function startTable(id){currentOrder={table_id:id,items:[]};let old=orders.find(x=>x.table_id===id&&x.status!=='จบงาน');if(old)try{currentOrder.items=JSON.parse(old.items||'[]')}catch{};renderOrder();document.getElementById('staffOrder').scrollIntoView({behavior:'smooth'})}
+function startTable(id){currentOrder={table_id:id,items:[]};let old=orders.find(x=>x.table_id===id&&x.status!=='จบงาน'&&x.status!=='CLOCK_LOG');if(old)try{currentOrder.items=JSON.parse(old.items||'[]')}catch{};renderOrder();document.getElementById('staffOrder').scrollIntoView({behavior:'smooth'})}
 function openOrder(){if(!tables.length){alert('ยังไม่มีโต๊ะ');return}startTable(tables[0].id)}
 function renderOrder(){
  const p=document.getElementById('staffOrder');p.classList.remove('hidden');
@@ -420,7 +459,7 @@ function renderOrder(){
 function addItem(id){let m=menus.find(x=>x.id===id),it=currentOrder.items.find(x=>x.menu_id===id);if(it)it.qty++;else currentOrder.items.push({menu_id:id,name:m.name,price:Number(m.price),qty:1});renderOrder()}
 function qty(i,d){currentOrder.items[i].qty+=d;if(currentOrder.items[i].qty<=0)currentOrder.items.splice(i,1);renderOrder()}
 function total(){return currentOrder.items.reduce((s,x)=>s+x.price*x.qty,0)}
-async function saveOrder(){if(!currentOrder.items.length){alert('กรุณาเลือกเมนูก่อน');return}let old=orders.find(x=>x.table_id===currentOrder.table_id&&x.status!=='จบงาน');let row={table_id:currentOrder.table_id,items:JSON.stringify(currentOrder.items),total:total(),status:old?old.status:'รออาหาร'};if(old)await dbUpdate('orders',old.id,row);else await dbInsert('orders',row);alert('บันทึกออเดอร์แล้ว');await refreshAll();document.getElementById('staffOrder').classList.add('hidden')}
+async function saveOrder(){if(!currentOrder.items.length){alert('กรุณาเลือกเมนูก่อน');return}let old=orders.find(x=>x.table_id===currentOrder.table_id&&x.status!=='จบงาน'&&x.status!=='CLOCK_LOG');let row={table_id:currentOrder.table_id,items:JSON.stringify(currentOrder.items),total:total(),status:old?old.status:'รออาหาร'};if(old)await dbUpdate('orders',old.id,row);else await dbInsert('orders',row);alert('บันทึกออเดอร์แล้ว');await refreshAll();document.getElementById('staffOrder').classList.add('hidden')}
 
 async function changeStatus(id){let o=orders.find(x=>x.id===id);let html=`<h3>เปลี่ยนสถานะ — ${tableName(o.table_id)}</h3><div class="field"><select id="newStatus">${statuses.map(s=>`<option ${s===o.status?'selected':''}>${s}</option>`).join('')}</select></div><div class="actions"><button class="btn" onclick="closeModal()">ยกเลิก</button><button class="primary" onclick="saveStatus(${id})">บันทึก</button></div>`;showModal(html)}
 async function saveStatus(id){await dbUpdate('orders',id,{status:document.getElementById('newStatus').value});closeModal();refreshAll()}
