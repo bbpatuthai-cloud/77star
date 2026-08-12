@@ -25,6 +25,13 @@ button,input,select,textarea{font:inherit}button{cursor:pointer;border:0;border-
 .dashStat{display:flex;flex-direction:column}.dashStat span{color:var(--muted);font-size:14px}.dashStat strong{font-size:32px;color:var(--pink);font-weight:900}
 .menuImg{width:100%;height:130px;object-fit:cover;border-radius:10px;margin-bottom:10px;background:#100b14;border:1px solid var(--line)}
 .menuThumb{width:48px;height:48px;object-fit:cover;border-radius:8px;background:#100b14;border:1px solid var(--line);flex-shrink:0}
+
+/* กำหนด Scrollbar และตรึงหัวตารางไม่ให้ดันหน้า */
+.tableScrollBox { max-height: 250px; overflow-y: auto; position: relative; border-radius: 8px; }
+.tableScrollBox table { width: 100%; text-align: left; border-collapse: collapse; }
+.tableScrollBox th { position: sticky; top: 0; background: #17111c; z-index: 2; padding: 10px; border-bottom: 1px solid var(--line); color: var(--muted); }
+.tableScrollBox td { padding: 10px; border-bottom: 1px solid #281d2e; }
+
 @media(max-width:800px){.roleGrid,.cols{grid-template-columns:1fr}.top{padding:0 14px}.logo{font-size:22px}}
 </style>
 </head>
@@ -91,20 +98,40 @@ button,input,select,textarea{font:inherit}button{cursor:pointer;border:0;border-
     </div>
   </div>
 
+  <!-- ส่วนแสดงตารางสรุปชั่วโมงทำงานรายวัน (ใหม่) -->
+  <div style="margin-bottom:25px">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
+      <h3 style="margin:0">⏱️ สรุปชั่วโมงทำงานพนักงาน (คำนวณแยกวัน)</h3>
+    </div>
+    <div class="card tableScrollBox">
+      <table>
+        <thead>
+          <tr>
+            <th>วันที่</th>
+            <th>ชื่อพนักงาน</th>
+            <th>รวมเวลาปฏิบัติงาน</th>
+            <th>จัดการ</th>
+          </tr>
+        </thead>
+        <tbody id="workHoursSummaryList"></tbody>
+      </table>
+    </div>
+  </div>
+
   <!-- ส่วนแสดงตารางประวัติเวลาทำงานพนักงาน Realtime -->
   <div style="margin-bottom:25px">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
-      <h3 style="margin:0">🕒 บันทึกเวลาและระยะเวลาทำงานพนักงาน (Realtime)</h3>
+      <h3 style="margin:0">🕒 บันทึกเวลาเข้า-ออกเวรพนักงาน (Realtime Log)</h3>
       <button class="btn" onclick="refreshAll()">↻ รีเฟรช</button>
     </div>
-    <div class="card" style="overflow-x:auto">
-      <table style="width:100%; text-align:left; border-collapse:collapse;">
+    <div class="card tableScrollBox">
+      <table>
         <thead>
-          <tr style="border-bottom:1px solid var(--line); color:var(--muted)">
-            <th style="padding:10px">ชื่อพนักงาน</th>
-            <th style="padding:10px">สถานะล่าสุด</th>
-            <th style="padding:10px">เวลาลงบันทึก</th>
-            <th style="padding:10px">เวลาที่ทำงานไปแล้ว</th>
+          <tr>
+            <th>ชื่อพนักงาน</th>
+            <th>สถานะ</th>
+            <th>เวลาบันทึก</th>
+            <th>การจัดการ</th>
           </tr>
         </thead>
         <tbody id="attendanceList"></tbody>
@@ -116,14 +143,14 @@ button,input,select,textarea{font:inherit}button{cursor:pointer;border:0;border-
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
       <h3 style="margin:0">🔥 เมนูขายดี (สถิติรายการที่สั่งเยอะสุด)</h3>
     </div>
-    <div class="card" style="overflow-x:auto">
-      <table style="width:100%; text-align:left; border-collapse:collapse;">
+    <div class="card tableScrollBox">
+      <table>
         <thead>
-          <tr style="border-bottom:1px solid var(--line); color:var(--muted)">
-            <th style="padding:10px">อันดับ</th>
-            <th style="padding:10px">เมนู</th>
-            <th style="padding:10px">จำนวนที่ขายได้</th>
-            <th style="padding:10px">ยอดขายรวม</th>
+          <tr>
+            <th>อันดับ</th>
+            <th>เมนู</th>
+            <th>จำนวนที่ขายได้</th>
+            <th>ยอดขายรวม</th>
           </tr>
         </thead>
         <tbody id="topItemsList"></tbody>
@@ -136,13 +163,13 @@ button,input,select,textarea{font:inherit}button{cursor:pointer;border:0;border-
       <h3 style="margin:0">📅 สรุปยอดขายย้อนหลังรายวัน</h3>
       <button class="btn" onclick="renderDailySummary()">↻ รีเฟรชยอดขาย</button>
     </div>
-    <div class="card" style="overflow-x:auto">
-      <table style="width:100%; text-align:left; border-collapse:collapse;">
+    <div class="card tableScrollBox">
+      <table>
         <thead>
-          <tr style="border-bottom:1px solid var(--line); color:var(--muted)">
-            <th style="padding:10px">วันที่</th>
-            <th style="padding:10px">จำนวนออเดอร์</th>
-            <th style="padding:10px">ยอดขายรวม</th>
+          <tr>
+            <th>วันที่</th>
+            <th>จำนวนออเดอร์</th>
+            <th>ยอดขายรวม</th>
           </tr>
         </thead>
         <tbody id="dailySalesList"></tbody>
@@ -175,7 +202,6 @@ const cfg=window.SUPABASE_CONFIG||{};
 if(cfg.url && cfg.publishableKey && window.supabase)
   sb=supabase.createClient(cfg.url,cfg.publishableKey);
 
-// Realtime Sync ผ่าน Supabase Channel
 if (sb) {
   sb.channel('77-star-realtime')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'tables' }, () => refreshAll())
@@ -254,11 +280,10 @@ async function clockInOut(type){
   const name = document.getElementById('staffNameSelect').value;
   if(!name) return alert('กรุณาเลือกชื่อพนักงานก่อนครับ');
 
-  const nowStr = new Date().toLocaleString('th-TH');
-  
+  const now = new Date();
   const row = {
     table_id: null,
-    items: JSON.stringify([{ staff_name: name, clock_type: type, clock_time: nowStr }]),
+    items: JSON.stringify([{ staff_name: name, clock_type: type, timestamp: now.getTime() }]),
     total: 0,
     status: 'CLOCK_LOG'
   };
@@ -274,82 +299,46 @@ function filterMyAttendance(){
   renderAttendanceList();
 }
 
-// ฟังก์ชันสำหรับคำนวณระยะเวลา (ชั่วโมง/นาที)
-function calculateDuration(startTime) {
-  if (!startTime) return '-';
-  const start = new Date(startTime);
-  const now = new Date();
-  
-  if (isNaN(start.getTime())) return '-';
-  
-  const diffMs = now - start;
-  if (diffMs < 0) return '0 นาที';
-  
-  const totalMinutes = Math.floor(diffMs / (1000 * 60));
-  const hours = Math.floor(totalMinutes / 60);
-  const minutes = totalMinutes % 60;
-  
-  if (hours > 0) {
-    return `${hours} ชั่วโมง ${minutes} นาที`;
-  }
-  return `${minutes} นาที`;
-}
-
 function renderAttendanceList(){
   const mgrListEl = document.getElementById('attendanceList');
   const staffLogEl = document.getElementById('staffAttendanceLog');
   const selectedStaff = document.getElementById('staffNameSelect')?.value;
   const staffLogTitle = document.getElementById('staffLogTitle');
   
-  // แปลง Log การลงเวลาทั้งหมด
-  const rawLogs = orders.filter(o => o.status === 'CLOCK_LOG').map(o => {
+  const clockOrders = orders.filter(o => o.status === 'CLOCK_LOG');
+  
+  const logs = clockOrders.map(o => {
     try {
       const data = JSON.parse(o.items || '[]')[0] || {};
-      const createdAt = o.created_at ? new Date(o.created_at) : null;
+      const timeStamp = data.timestamp || (o.created_at ? new Date(o.created_at).getTime() : Date.now());
+      const timeDisplay = new Date(timeStamp).toLocaleString('th-TH');
+      const dateKey = new Date(timeStamp).toLocaleDateString('th-TH');
       return {
+        id: o.id,
         name: data.staff_name || 'ไม่ระบุชื่อ',
         type: data.clock_type || 'เข้าเวร',
-        timeStr: o.created_at ? createdAt.toLocaleString('th-TH') : (data.clock_time || ''),
-        rawTime: createdAt
+        time: timeDisplay,
+        timestamp: timeStamp,
+        dateKey: dateKey
       };
     } catch(e){ return null; }
-  }).filter(Boolean);
+  }).filter(Boolean).sort((a,b) => b.timestamp - a.timestamp);
 
-  // คำนวณหาพนักงานที่กำลังเข้าเวรอยู่ล่าสุด
-  const latestStatusPerStaff = {};
-  rawLogs.forEach(l => {
-    if (!latestStatusPerStaff[l.name]) {
-      latestStatusPerStaff[l.name] = l;
-    } else if (l.rawTime && latestStatusPerStaff[l.name].rawTime && l.rawTime > latestStatusPerStaff[l.name].rawTime) {
-      latestStatusPerStaff[l.name] = l;
-    }
-  });
-
-  const logs = [...rawLogs].reverse();
+  // สรุปเวลาทำงาน (ชั่วโมง-นาที) แยกตามวันและคน
+  renderWorkHoursSummary(logs);
 
   if(mgrListEl){
     if(!logs.length){
       mgrListEl.innerHTML = '<tr><td colspan="4" class="empty" style="border:none">ยังไม่มีประวัติการบันทึกเวลา</td></tr>';
     } else {
-      mgrListEl.innerHTML = logs.slice(0, 20).map(l => {
-        const isWorking = (latestStatusPerStaff[l.name]?.type === 'เข้าเวร' && latestStatusPerStaff[l.name]?.timeStr === l.timeStr);
-        const workDuration = isWorking ? calculateDuration(l.rawTime) : '-';
-
-        return `
-          <tr style="border-bottom:1px solid #281d2e">
-            <td style="padding:12px 10px; font-weight:bold">${esc(l.name)}</td>
-            <td style="padding:12px 10px">
-              <span class="status" style="background:${l.type==='เข้าเวร'?'#173d2b':'#4b1824'}; color:${l.type==='เข้าเวร'?'var(--ok)':'var(--danger)'}">
-                ${esc(l.type)}
-              </span>
-            </td>
-            <td style="padding:12px 10px; color:var(--muted)">${esc(l.timeStr)}</td>
-            <td style="padding:12px 10px; font-weight:bold; color:${isWorking ? 'var(--pink)' : 'var(--muted)'}">
-              ${isWorking ? `⏳ ทำงานแล้ว ${workDuration}` : '-'}
-            </td>
-          </tr>
-        `;
-      }).join('');
+      mgrListEl.innerHTML = logs.map(l => `
+        <tr>
+          <td style="font-weight:bold">${esc(l.name)}</td>
+          <td><span class="status" style="background:${l.type==='เข้าเวร'?'#173d2b':'#4b1824'}; color:${l.type==='เข้าเวร'?'var(--ok)':'var(--danger)'}">${esc(l.type)}</span></td>
+          <td style="color:var(--muted)">${esc(l.time)}</td>
+          <td><button class="danger" style="padding:4px 8px; font-size:12px;" onclick="deleteClockLog(${l.id})">ลบ</button></td>
+        </tr>
+      `).join('');
     }
   }
 
@@ -365,22 +354,107 @@ function renderAttendanceList(){
     if(!filteredLogs.length){
       staffLogEl.innerHTML = '<span class="muted">ยังไม่มีประวัติการเข้า-ออกเวร</span>';
     } else {
-      staffLogEl.innerHTML = filteredLogs.slice(0, 10).map(l => {
-        const isWorking = (latestStatusPerStaff[l.name]?.type === 'เข้าเวร' && latestStatusPerStaff[l.name]?.timeStr === l.timeStr);
-        const workDuration = isWorking ? calculateDuration(l.rawTime) : '';
-
-        return `
-          <div style="display:flex; justify-content:space-between; margin-bottom:6px; background:#18111e; padding:6px 10px; border-radius:6px; border:1px solid #302336;">
-            <span>
-              <b>${esc(l.name)}</b> 
-              (<span style="color:${l.type==='เข้าเวร'?'var(--ok)':'var(--danger)'}">${esc(l.type)}</span>)
-              ${isWorking ? ` <small style="color:var(--pink)">(ทำงานไปแล้ว ${workDuration})</small>` : ''}
-            </span>
-            <span class="muted">${esc(l.timeStr)}</span>
-          </div>
-        `;
-      }).join('');
+      staffLogEl.innerHTML = filteredLogs.slice(0, 10).map(l => `
+        <div style="display:flex; justify-content:space-between; margin-bottom:6px; background:#18111e; padding:6px 10px; border-radius:6px; border:1px solid #302336;">
+          <span><b>${esc(l.name)}</b> (<span style="color:${l.type==='เข้าเวร'?'var(--ok)':'var(--danger)'}">${esc(l.type)}</span>)</span>
+          <span class="muted">${esc(l.time)}</span>
+        </div>
+      `).join('');
     }
+  }
+}
+
+// ฟังก์ชันคำนวณชั่วโมงทำงาน
+function renderWorkHoursSummary(logs) {
+  const summaryEl = document.getElementById('workHoursSummaryList');
+  if(!summaryEl) return;
+
+  // จัดกลุ่มข้อมูลตาม [วันที่][ชื่อพนักงาน] เรียงตามเวลาเก่าไปใหม่
+  const chronologicalLogs = [...logs].reverse();
+  const grouped = {};
+
+  chronologicalLogs.forEach(l => {
+    if(!grouped[l.dateKey]) grouped[l.dateKey] = {};
+    if(!grouped[l.dateKey][l.name]) grouped[l.dateKey][l.name] = [];
+    grouped[l.dateKey][l.name].push(l);
+  });
+
+  const summaryRows = [];
+
+  Object.keys(grouped).forEach(dateKey => {
+    Object.keys(grouped[dateKey]).forEach(staffName => {
+      const staffLogs = grouped[dateKey][staffName];
+      let totalMs = 0;
+      let lastInTime = null;
+
+      staffLogs.forEach(entry => {
+        if (entry.type === 'เข้าเวร') {
+          lastInTime = entry.timestamp;
+        } else if (entry.type === 'ออกเวร' && lastInTime) {
+          totalMs += (entry.timestamp - lastInTime);
+          lastInTime = null;
+        }
+      });
+
+      // ถ้ายังไม่กดออกเวร ให้คำนวณเวลาปัจจุบันแบบ Realtime
+      let isWorking = false;
+      if (lastInTime) {
+        totalMs += (Date.now() - lastInTime);
+        isWorking = true;
+      }
+
+      const totalMinutes = Math.floor(totalMs / (1000 * 60));
+      const hours = Math.floor(totalMinutes / 60);
+      const mins = totalMinutes % 60;
+
+      const logIdsToDelete = staffLogs.map(l => l.id);
+
+      summaryRows.push({
+        dateKey,
+        staffName,
+        hours,
+        mins,
+        isWorking,
+        ids: logIdsToDelete
+      });
+    });
+  });
+
+  if(!summaryRows.length) {
+    summaryEl.innerHTML = '<tr><td colspan="4" class="empty" style="border:none">ยังไม่มีสรุปเวลาทำงาน</td></tr>';
+    return;
+  }
+
+  summaryEl.innerHTML = summaryRows.reverse().map(s => `
+    <tr>
+      <td style="font-weight:bold">${esc(s.dateKey)}</td>
+      <td><b>${esc(s.staffName)}</b></td>
+      <td style="color:var(--pink); font-weight:bold">
+        ${s.hours} ชั่วโมง ${s.mins} นาที 
+        ${s.isWorking ? '<span class="status" style="background:#173d2b; color:var(--ok); margin-left:6px;">กำลังเข้าเวร</span>' : ''}
+      </td>
+      <td>
+        <button class="danger" style="padding:4px 8px; font-size:12px;" onclick="deleteDayWorkLog('${esc(s.dateKey)}', '${esc(s.staffName)}', [${s.ids.join(',')}])">
+          🗑️ ลบประวัติวันนี้
+        </button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+async function deleteClockLog(id){
+  if(confirm('คุณต้องการลบรายการบันทึกเวลานี้ใช่หรือไม่?')){
+    await dbDelete('orders', id);
+    refreshAll();
+  }
+}
+
+async function deleteDayWorkLog(dateKey, name, ids){
+  if(confirm(`ต้องการลบประวัติการเข้า-ออกเวรของ "${name}" ในวันที่ ${dateKey} ทั้งหมดใช่หรือไม่?`)){
+    for(let id of ids){
+      await dbDelete('orders', id);
+    }
+    refreshAll();
   }
 }
 
@@ -460,10 +534,10 @@ function renderDailySummary(){
 
   const rows = Object.keys(salesByDate).map(date => ({ date, count: salesByDate[date].count, total: salesByDate[date].total }));
   listEl.innerHTML = rows.map(r => `
-    <tr style="border-bottom:1px solid #281d2e">
-      <td style="padding:12px 10px; font-weight:bold">${esc(r.date)}</td>
-      <td style="padding:12px 10px">${r.count} ออเดอร์</td>
-      <td style="padding:12px 10px; color:var(--pink); font-weight:bold">${money(r.total)}</td>
+    <tr>
+      <td style="font-weight:bold">${esc(r.date)}</td>
+      <td>${r.count} ออเดอร์</td>
+      <td style="color:var(--pink); font-weight:bold">${money(r.total)}</td>
     </tr>
   `).join('');
 }
@@ -505,14 +579,14 @@ function renderTopItems(){
   }
 
   topEl.innerHTML = sorted.slice(0, 10).map((item, idx) => `
-    <tr style="border-bottom:1px solid #281d2e">
-      <td style="padding:12px 10px; font-weight:bold; color:var(--pink)">#${idx + 1}</td>
-      <td style="padding:12px 10px; display:flex; align-items:center; gap:10px">
+    <tr>
+      <td style="font-weight:bold; color:var(--pink)">#${idx + 1}</td>
+      <td style="display:flex; align-items:center; gap:10px">
         ${item.image_url ? `<img src="${esc(item.image_url)}" class="menuThumb" onerror="this.style.display='none'">` : ''}
         <b>${esc(item.name)}</b>
       </td>
-      <td style="padding:12px 10px"><b>${item.qty}</b> จาน/ชิ้น</td>
-      <td style="padding:12px 10px; color:var(--pink); font-weight:bold">${money(item.total)}</td>
+      <td><b>${item.qty}</b> จาน/ชิ้น</td>
+      <td style="color:var(--pink); font-weight:bold">${money(item.total)}</td>
     </tr>
   `).join('');
 }
