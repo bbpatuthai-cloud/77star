@@ -37,12 +37,25 @@ button,input,select,textarea{font:inherit}button{cursor:pointer;border:0;border-
 <main class="wrap">
 <section id="rolePage">
   <div class="roleGrid">
-    <div class="role"><div style="font-size:55px">👨‍🍳</div><h2>พนักงาน</h2><p>รับออเดอร์ เลือกโต๊ะ เลือกเมนู คำนวณยอด และอัปเดตสถานะ</p><button onclick="enterRole('staff')">เข้าหน้าพนักงาน</button></div>
-    <div class="role"><div style="font-size:55px">👑</div><h2>ผู้จัดการ</h2><p>จัดการโต๊ะ เมนู ราคา ออเดอร์ และดูข้อมูลทั้งหมด</p><button onclick="enterRole('manager')">เข้าหน้าผู้จัดการ</button></div>
+    <div class="role"><div style="font-size:55px">👨‍🍳</div><h2>พนักงาน</h2><p>รับออเดอร์ ลงเวลาเข้า-ออกเวร และอัปเดตสถานะ</p><button onclick="enterRole('staff')">เข้าหน้าพนักงาน</button></div>
+    <div class="role"><div style="font-size:55px">👑</div><h2>ผู้จัดการ</h2><p>จัดการโต๊ะ เมนู พนักงาน เช็กเวลาทำงาน และดูยอดขาย</p><button onclick="enterRole('manager')">เข้าหน้าผู้จัดการ</button></div>
   </div>
 </section>
 
+<!-- หน้าพนักงาน -->
 <section id="staffPage" class="hidden">
+  <!-- ส่วนเช็กชื่อเข้า-ออกเวร -->
+  <div class="card" style="margin-bottom:20px; border:1px solid var(--pink)">
+    <h3 style="margin-top:0">⏰ บันทึกเวลาเข้า-ออกเวรพนักงาน</h3>
+    <div class="row">
+      <div class="field" style="flex:1; min-width:200px; margin:0">
+        <select id="staffNameSelect"><option value="">-- เลือกชื่อพนักงาน --</option></select>
+      </div>
+      <button class="success" onclick="clockInOut('เข้าเวร')">🟢 เข้าเวร</button>
+      <button class="danger" onclick="clockInOut('ออกเวร')">🔴 ออกเวร</button>
+    </div>
+  </div>
+
   <div class="toolbar">
     <button class="btn" onclick="refreshAll()">↻ อัปเดตข้อมูล</button>
     <button class="btn" onclick="openOrder()">＋ รับออเดอร์ใหม่</button>
@@ -52,11 +65,13 @@ button,input,select,textarea{font:inherit}button{cursor:pointer;border:0;border-
   <div id="staffOrder" class="orderPanel hidden"></div>
 </section>
 
+<!-- หน้าผู้จัดการ -->
 <section id="managerPage" class="hidden">
   <div class="toolbar">
     <button class="btn" onclick="refreshAll()">↻ อัปเดตข้อมูล</button>
     <button class="primary" onclick="openTableModal()">＋ เพิ่มโต๊ะ</button>
     <button class="primary" onclick="openMenuModal()">＋ เพิ่มเมนู</button>
+    <button class="primary" style="background:#8b5cf6; color:#fff" onclick="openStaffModal()">＋ จัดการรายชื่อพนักงาน</button>
   </div>
   
   <div class="dashboard">
@@ -67,6 +82,26 @@ button,input,select,textarea{font:inherit}button{cursor:pointer;border:0;border-
     <div class="dashStat">
       <span>📊 จำนวนออเดอร์ที่ชำระแล้ว</span>
       <strong id="todayOrderCount" style="color:#fff">0 ออเดอร์</strong>
+    </div>
+  </div>
+
+  <!-- ส่วนแสดงตารางประวัติเวลาทำงานพนักงาน -->
+  <div style="margin-bottom:25px">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
+      <h3 style="margin:0">🕒 บันทึกเวลาเข้า-ออกเวรพนักงาน</h3>
+      <button class="btn" onclick="renderAttendanceList()">↻ รีเฟรชประวัติ</button>
+    </div>
+    <div class="card" style="overflow-x:auto">
+      <table style="width:100%; text-align:left; border-collapse:collapse;">
+        <thead>
+          <tr style="border-bottom:1px solid var(--line); color:var(--muted)">
+            <th style="padding:10px">ชื่อพนักงาน</th>
+            <th style="padding:10px">สถานะ</th>
+            <th style="padding:10px">เวลาบันทึก</th>
+          </tr>
+        </thead>
+        <tbody id="attendanceList"></tbody>
+      </table>
     </div>
   </div>
 
@@ -126,7 +161,7 @@ window.SUPABASE_CONFIG = {
 </script>
 
 <script>
-let sb=null, role=null, tables=[], menus=[], orders=[], currentOrder={table_id:null,items:[]};
+let sb=null, role=null, tables=[], menus=[], orders=[], staffList=[], attendanceLogs=[], currentOrder={table_id:null,items:[]};
 const statuses=['ยังไม่ชำระเงิน','ชำระเงินแล้ว','รออาหาร','เสิร์ฟแล้ว','จบงาน'];
 const cfg=window.SUPABASE_CONFIG||{};
 
@@ -141,7 +176,6 @@ if (sb) {
     .subscribe();
 }
 
-// ฟังก์ชันดึงรูปภาพและรายละเอียดออกจาก description เดิม
 function parseMenuDesc(descText) {
   if (!descText) return { img: '', desc: '' };
   const match = descText.match(/\[IMG:(.*?)\]/);
@@ -150,10 +184,7 @@ function parseMenuDesc(descText) {
     if (rawUrl.includes('discordapp.com/attachments/') || rawUrl.includes('discordapp.net/attachments/')) {
       rawUrl = rawUrl.replace('cdn.discordapp.com', 'media.discordapp.net');
     }
-    return {
-      img: rawUrl,
-      desc: descText.replace(/\[IMG:.*?\]/, '').trim()
-    };
+    return { img: rawUrl, desc: descText.replace(/\[IMG:.*?\]/, '').trim() };
   }
   return { img: '', desc: descText };
 }
@@ -183,7 +214,83 @@ async function dbDelete(table,id){if(!sb){let a=await dbGet(table);a=a.filter(x=
 
 async function refreshAll(){
   tables=await dbGet('tables'); menus=await dbGet('menus'); orders=await dbGet('orders');
+  loadStaffAndAttendance();
   renderStaff();renderManager();calculateTodaySales();renderDailySummary();renderTopItems();
+}
+
+// ระบบจัดการรายชื่อพนักงานและบันทึกเวลา
+function loadStaffAndAttendance(){
+  const staffData = localStorage.getItem('77_staff_list');
+  staffList = staffData ? JSON.parse(staffData) : ['พนักงาน 1', 'พนักงาน 2'];
+  
+  const logData = localStorage.getItem('77_attendance_logs');
+  attendanceLogs = logData ? JSON.parse(logData) : [];
+
+  // อัปเดตตัวเลือกชื่อพนักงานในหน้า staff
+  const sel = document.getElementById('staffNameSelect');
+  if(sel){
+    sel.innerHTML = '<option value="">-- เลือกชื่อพนักงาน --</option>' + 
+      staffList.map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join('');
+  }
+  renderAttendanceList();
+}
+
+function clockInOut(type){
+  const name = document.getElementById('staffNameSelect').value;
+  if(!name) return alert('กรุณาเลือกชื่อพนักงานก่อนครับ');
+
+  const now = new Date().toLocaleString('th-TH');
+  const log = { name, type, time: now };
+  attendanceLogs.unshift(log);
+  localStorage.setItem('77_attendance_logs', JSON.stringify(attendanceLogs));
+
+  alert(`บันทึกเวลา "${type}" สำหรับ ${name} เรียบร้อยแล้ว`);
+  renderAttendanceList();
+}
+
+function renderAttendanceList(){
+  const el = document.getElementById('attendanceList');
+  if(!el) return;
+  if(!attendanceLogs.length){
+    el.innerHTML = '<tr><td colspan="3" class="empty" style="border:none">ยังไม่มีประวัติการบันทึกเวลา</td></tr>';
+    return;
+  }
+  el.innerHTML = attendanceLogs.slice(0, 15).map(l => `
+    <tr style="border-bottom:1px solid #281d2e">
+      <td style="padding:12px 10px; font-weight:bold">${esc(l.name)}</td>
+      <td style="padding:12px 10px"><span class="status" style="background:${l.type==='เข้าเวร'?'#173d2b':'#4b1824'}; color:${l.type==='เข้าเวร'?'var(--ok)':'var(--danger)'}">${l.type}</span></td>
+      <td style="padding:12px 10px; color:var(--muted)">${esc(l.time)}</td>
+    </tr>
+  `).join('');
+}
+
+function openStaffModal(){
+  showModal(`
+    <h3>👑 จัดการรายชื่อพนักงาน</h3>
+    <div class="field"><label>เพิ่มพนักงานใหม่</label><input id="newStaffName" placeholder="กรอกชื่อพนักงาน"></div>
+    <button class="primary" style="width:100%; margin-bottom:15px" onclick="addStaff()">＋ เพิ่มพนักงาน</button>
+    <h4>รายชื่อพนักงานปัจจุบัน</h4>
+    <div style="max-height:180px; overflow-y:auto">
+      ${staffList.map((s,i) => `<div class="menuItem"><span>${esc(s)}</span><button class="danger" onclick="removeStaff(${i})">ลบ</button></div>`).join('')}
+    </div>
+    <div class="actions" style="margin-top:15px"><button class="btn" onclick="closeModal()">ปิด</button></div>
+  `);
+}
+
+function addStaff(){
+  const name = document.getElementById('newStaffName').value.trim();
+  if(!name) return;
+  staffList.push(name);
+  localStorage.setItem('77_staff_list', JSON.stringify(staffList));
+  openStaffModal();
+  loadStaffAndAttendance();
+}
+
+function removeStaff(index){
+  staffList.splice(index, 1);
+  localStorage.setItem('77_staff_list', JSON.stringify(staffList));
+  openStaffModal();
+  loadStaffAndAttendance();
 }
 
 function calculateTodaySales(){
@@ -346,7 +453,6 @@ async function addMenu(){
       d=document.getElementById('menuDesc').value.trim();
   if(!n||!p)return alert('กรอกชื่อและราคา');
   
-  // รวมลิงก์รูปใส่ไว้ใน description เพื่อหลีกเลี่ยงการสร้างคอลัมน์ใหม่ใน Supabase
   let fullDesc = img ? `[IMG:${img}] ${d}` : d;
   await dbInsert('menus',{name:n,price:p,description:fullDesc});
   closeModal();refreshAll();
