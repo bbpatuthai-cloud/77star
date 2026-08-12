@@ -104,7 +104,6 @@ button,input,select,textarea{font:inherit}button{cursor:pointer;border:0;border-
     </div>
   </div>
 
-  <!-- ส่วนแสดงรายการสินค้าที่ขายได้วันนี้ -->
   <div style="margin-bottom:25px">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
       <h3 style="margin:0">📦 รายละเอียดสินค้าที่ขายได้วันนี้</h3>
@@ -125,7 +124,6 @@ button,input,select,textarea{font:inherit}button{cursor:pointer;border:0;border-
     </div>
   </div>
 
-  <!-- ส่วนแสดงตารางประวัติการปิดยอดขายรายวัน -->
   <div style="margin-bottom:25px">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
       <h3 style="margin:0">📑 ประวัติการปิดยอดขายรายวัน (Daily Settlement Logs)</h3>
@@ -146,11 +144,9 @@ button,input,select,textarea{font:inherit}button{cursor:pointer;border:0;border-
     </div>
   </div>
 
-  <!-- ส่วนแสดงตารางสรุปชั่วโมงทำงานรายวัน -->
   <div style="margin-bottom:25px">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
       <h3 style="margin:0">⏱️ สรุปชั่วโมงทำงานพนักงาน (คำนวณแยกวัน)</h3>
-      <!-- เพิ่มปุ่มรีเฟรชที่นี่ พร้อมผูกฟังก์ชัน refreshAll() -->
       <button class="btn" onclick="refreshAll()">↻ รีเฟรช</button>
     </div>
     <div class="card tableScrollBox">
@@ -168,7 +164,6 @@ button,input,select,textarea{font:inherit}button{cursor:pointer;border:0;border-
     </div>
   </div>
 
-  <!-- ส่วนแสดงตารางประวัติเวลาทำงานพนักงาน Realtime -->
   <div style="margin-bottom:25px">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
       <h3 style="margin:0">🕒 บันทึกเวลาเข้า-ออกเวรพนักงาน (Realtime Log)</h3>
@@ -228,7 +223,7 @@ window.SUPABASE_CONFIG = {
 
 <script>
 let sb=null, role=null, tables=[], menus=[], orders=[], staffList=[], currentOrder={table_id:null,items:[]};
-const statuses=['ยังไม่ชำระเงิน','ชำระเงินแล้ว','รออาหาร','เสิร์ฟแล้ว','จบงาน'];
+const statuses=['ยังไม่ชำระเงิน','ชำระเงินแล้ว','รออาหาร','กำลังทำ','เสิร์ฟแล้ว','จบงาน'];
 const cfg=window.SUPABASE_CONFIG||{};
 
 if(cfg.url && cfg.publishableKey && window.supabase)
@@ -236,23 +231,35 @@ if(cfg.url && cfg.publishableKey && window.supabase)
 
 if (sb) {
   sb.channel('77-star-realtime')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'tables' }, () => refreshAll())
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'menus' }, () => refreshAll())
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => refreshAll())
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'uwu_tables' }, () => refreshAll())
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'uwu_menus' }, () => refreshAll())
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'uwu_orders' }, () => refreshAll())
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'uwu_staff' }, () => refreshAll())
     .subscribe();
 }
 
 function parseMenuDesc(descText) {
-  if (!descText) return { img: '', desc: '' };
-  const match = descText.match(/\[IMG:(.*?)\]/);
-  if (match) {
-    let rawUrl = match[1];
+  if (!descText) return { img: '', desc: '', cat: '', icon: '' };
+  try {
+    // รองรับ JSON Description ของ Database ใหม่
+    const parsed = JSON.parse(descText);
+    let rawUrl = parsed.image || '';
     if (rawUrl.includes('discordapp.com/attachments/') || rawUrl.includes('discordapp.net/attachments/')) {
       rawUrl = rawUrl.replace('cdn.discordapp.com', 'media.discordapp.net');
     }
-    return { img: rawUrl, desc: descText.replace(/\[IMG:.*?\]/, '').trim() };
+    return { img: rawUrl, desc: parsed.desc || '', cat: parsed.cat || '', icon: parsed.icon || '' };
+  } catch(e) {
+    // Fallback หากข้อมูลเก่าไม่ได้เป็น JSON
+    const match = descText.match(/\[IMG:(.*?)\]/);
+    if (match) {
+      let rawUrl = match[1];
+      if (rawUrl.includes('discordapp.com/attachments/') || rawUrl.includes('discordapp.net/attachments/')) {
+        rawUrl = rawUrl.replace('cdn.discordapp.com', 'media.discordapp.net');
+      }
+      return { img: rawUrl, desc: descText.replace(/\[IMG:.*?\]/, '').trim(), cat: '', icon: '' };
+    }
+    return { img: '', desc: descText, cat: '', icon: '' };
   }
-  return { img: '', desc: descText };
 }
 
 // ----------------------------------------------------
@@ -267,14 +274,14 @@ async function getManagerPassword() {
       if (parsed.password) return parsed.password;
     } catch(e){}
   }
-  return localStorage.getItem('77_manager_pwd') || '9999'; // รหัสเริ่มต้นคือ 1234
+  return localStorage.getItem('77_manager_pwd') || '9999';
 }
 
 async function enterRole(r){
   if (r === 'manager') {
     const currentPwd = await getManagerPassword();
     const inputPwd = prompt('🔑 กรุณากรอกรหัสผ่านผู้จัดการร้าน:');
-    if (inputPwd === null) return; // กดยกเลิก
+    if (inputPwd === null) return;
     if (inputPwd !== currentPwd) {
       alert('❌ รหัสผ่านไม่ถูกต้อง! ไม่สามารถเข้าสู่ระบบผู้จัดการได้');
       return;
@@ -320,7 +327,7 @@ async function saveNewPassword() {
     status: 'MANAGER_PWD'
   };
 
-  await dbInsert('orders', row);
+  await dbInsert('uwu_orders', row);
   localStorage.setItem('77_manager_pwd', newPwdInput);
   alert('🟢 เปลี่ยนรหัสผ่านสำเร็จ!');
   closeModal();
@@ -337,7 +344,7 @@ async function resetTodaySales() {
 
   if (confirm(`⚠️ คุณแน่ใจหรือไม่ว่าต้องการ "ล้างยอดขายวันนี้" ทั้งหมด (${todayOrders.length} รายการ)?\nการดำเนินการนี้จะลบรายการสั่งซื้อวันนี้ที่ชำระเงินแล้วออกจากระบบ!`)) {
     for (let o of todayOrders) {
-      await dbDelete('orders', o.id);
+      await dbDelete('uwu_orders', o.id);
     }
     alert('🟢 ล้างยอดขายของวันนี้เรียบร้อยแล้ว');
     refreshAll();
@@ -352,7 +359,7 @@ async function resetAllOrderStats() {
 
   if (confirm(`⚠️ ยืนยันการ "รีเซ็ตสถิติขายดีทั้งหมด"?\nระบบจะทำการลบประวัติออเดอร์ที่จบงานแล้วทั้งหมด (${paidOrders.length} รายการ)`)) {
     for (let o of paidOrders) {
-      await dbDelete('orders', o.id);
+      await dbDelete('uwu_orders', o.id);
     }
     alert('🟢 รีเซ็ตสถิติขายดีทั้งหมดเรียบร้อยแล้ว');
     refreshAll();
@@ -374,31 +381,27 @@ async function dbUpdate(table,id,row){if(!sb){let a=await dbGet(table);a=a.map(x
 async function dbDelete(table,id){if(!sb){let a=await dbGet(table);a=a.filter(x=>x.id!==id);localStorage.setItem('77_'+table,JSON.stringify(a));return true}let {error}=await sb.from(table).delete().eq('id',id);if(error){alert(error.message);return false}return true}
 
 async function refreshAll(){
-  tables=await dbGet('tables'); menus=await dbGet('menus'); orders=await dbGet('orders');
+  tables = await dbGet('uwu_tables'); 
+  menus = await dbGet('uwu_menus'); 
+  orders = await dbGet('uwu_orders');
+  staffList = await dbGet('uwu_staff'); // อัปเดตรายชื่อพนักงานจาก DB SQL
+  
   await loadStaffList();
-  renderStaff();renderManager();calculateTodaySales();renderTodaySoldItems();renderDailySummary();renderTopItems();renderAttendanceList();
+  renderStaff();
+  renderManager();
+  calculateTodaySales();
+  renderTodaySoldItems();
+  renderDailySummary();
+  renderTopItems();
+  renderAttendanceList();
 }
 
 async function loadStaffList(){
-  const staffLogs = orders.filter(o => o.status === 'STAFF_LIST');
-  let currentStaffList = [];
-  
-  if (staffLogs.length > 0) {
-    try {
-      const latest = staffLogs[staffLogs.length - 1];
-      currentStaffList = JSON.parse(latest.items || '[]');
-    } catch(e) {}
-  } else {
-    currentStaffList = ['พนักงาน 1', 'พนักงาน 2'];
-  }
-  
-  staffList = currentStaffList;
-  
   const sel = document.getElementById('staffNameSelect');
   if(sel){
     const selectedVal = sel.value;
     sel.innerHTML = '<option value="">-- เลือกชื่อพนักงาน --</option>' + 
-      staffList.map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join('');
+      staffList.map(s => `<option value="${esc(s.name)}">${esc(s.name)}</option>`).join('');
     if (selectedVal) sel.value = selectedVal;
   }
 }
@@ -408,14 +411,25 @@ async function clockInOut(type){
   if(!name) return alert('กรุณาเลือกชื่อพนักงานก่อนครับ');
 
   const now = new Date();
+  
+  // สร้าง Log สำหรับคำนวณชั่วโมง (ใช้ตาราง uwu_orders แบบเดิมเพื่อไม่ให้สูตรเก่าพัง)
   const row = {
     table_id: null,
     items: JSON.stringify([{ staff_name: name, clock_type: type, timestamp: now.getTime() }]),
     total: 0,
     status: 'CLOCK_LOG'
   };
+  const res = await dbInsert('uwu_orders', row);
+  
+  // อัปเดตสถานะของพนักงานในตาราง uwu_staff ด้วย
+  const staffMember = staffList.find(s => s.name === name);
+  if (staffMember) {
+    await dbUpdate('uwu_staff', staffMember.id, { 
+      attendance: type, 
+      attendance_time: now.toLocaleString('th-TH') 
+    });
+  }
 
-  const res = await dbInsert('orders', row);
   if(res) {
     alert(`บันทึกเวลา "${type}" สำหรับ ${name} เรียบร้อยแล้ว`);
     refreshAll();
@@ -438,7 +452,6 @@ function renderAttendanceList(){
     try {
       const data = JSON.parse(o.items || '[]')[0] || {};
       const timeStamp = data.timestamp || (o.created_at ? new Date(o.created_at).getTime() : Date.now());
-      // ปรับ Format เวลาให้แสดงวินาทีด้วย
       const timeDisplay = new Date(timeStamp).toLocaleString('th-TH', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' });
       const dateKey = new Date(timeStamp).toLocaleDateString('th-TH');
       return {
@@ -527,7 +540,6 @@ function renderWorkHoursSummary(logs) {
         isWorking = true;
       }
 
-      // คำนวณเพิ่มวินาที
       const totalSeconds = Math.floor(totalMs / 1000);
       const hours = Math.floor(totalSeconds / 3600);
       const mins = Math.floor((totalSeconds % 3600) / 60);
@@ -540,7 +552,7 @@ function renderWorkHoursSummary(logs) {
         staffName,
         hours,
         mins,
-        secs, // เพิ่มวินาที
+        secs, 
         isWorking,
         ids: logIdsToDelete
       });
@@ -552,7 +564,6 @@ function renderWorkHoursSummary(logs) {
     return;
   }
 
-  // อัปเดตการแสดงผลในหน้าเว็บให้มีวินาที
   summaryEl.innerHTML = summaryRows.reverse().map(s => `
     <tr>
       <td style="font-weight:bold">${esc(s.dateKey)}</td>
@@ -572,7 +583,7 @@ function renderWorkHoursSummary(logs) {
 
 async function deleteClockLog(id){
   if(confirm('คุณต้องการลบรายการบันทึกเวลานี้ใช่หรือไม่?')){
-    await dbDelete('orders', id);
+    await dbDelete('uwu_orders', id);
     refreshAll();
   }
 }
@@ -580,7 +591,7 @@ async function deleteClockLog(id){
 async function deleteDayWorkLog(dateKey, name, ids){
   if(confirm(`ต้องการลบประวัติการเข้า-ออกเวรของ "${name}" ในวันที่ ${dateKey} ทั้งหมดใช่หรือไม่?`)){
     for(let id of ids){
-      await dbDelete('orders', id);
+      await dbDelete('uwu_orders', id);
     }
     refreshAll();
   }
@@ -593,35 +604,30 @@ function openStaffModal(){
     <button class="primary" style="width:100%; margin-bottom:15px" onclick="addStaff()">＋ เพิ่มพนักงาน</button>
     <h4>รายชื่อพนักงานปัจจุบัน</h4>
     <div style="max-height:180px; overflow-y:auto">
-      ${staffList.map((s,i) => `<div class="menuItem"><span>${esc(s)}</span><button class="danger" onclick="removeStaff(${i})">ลบ</button></div>`).join('')}
+      ${staffList.map(s => `<div class="menuItem"><span>${esc(s.name)}</span><button class="danger" onclick="removeStaff(${s.id})">ลบ</button></div>`).join('')}
     </div>
     <div class="actions" style="margin-top:15px"><button class="btn" onclick="closeModal()">ปิด</button></div>
   `);
 }
 
-async function saveStaffListToDb(newList) {
-  const row = {
-    table_id: null,
-    items: JSON.stringify(newList),
-    total: 0,
-    status: 'STAFF_LIST'
-  };
-  await dbInsert('orders', row);
-  await refreshAll();
-}
-
 async function addStaff(){
   const name = document.getElementById('newStaffName').value.trim();
   if(!name) return;
-  const newList = [...staffList, name];
-  await saveStaffListToDb(newList);
+  // บันทึกลงใน uwu_staff
+  await dbInsert('uwu_staff', {
+    name: name,
+    role: 'พนักงานเสิร์ฟ',
+    status: 'กำลังทำงาน',
+    attendance: 'ยังไม่เข้าเวร',
+    attendance_time: '-'
+  });
+  await refreshAll();
   openStaffModal();
 }
 
-async function removeStaff(index){
-  const newList = [...staffList];
-  newList.splice(index, 1);
-  await saveStaffListToDb(newList);
+async function removeStaff(id){
+  await dbDelete('uwu_staff', id);
+  await refreshAll();
   openStaffModal();
 }
 
@@ -760,7 +766,7 @@ async function saveDailySettlement(){
     status: 'DAILY_SETTLEMENT'
   };
 
-  const res = await dbInsert('orders', row);
+  const res = await dbInsert('uwu_orders', row);
   if(res){
     alert('บันทึกปิดยอดขายประจำวันสำเร็จเรียบร้อยแล้ว!');
     refreshAll();
@@ -842,7 +848,7 @@ function viewSettlementDetail(id){
 
 async function deleteSettlement(id){
   if(confirm('คุณต้องการลบประวัติการปิดยอดรายการนี้ใช่หรือไม่?')){
-    await dbDelete('orders', id);
+    await dbDelete('uwu_orders', id);
     refreshAll();
   }
 }
@@ -929,19 +935,19 @@ function renderOrder(){
 function addItem(id){let m=menus.find(x=>x.id===id),it=currentOrder.items.find(x=>x.menu_id===id);if(it)it.qty++;else currentOrder.items.push({menu_id:id,name:m.name,price:Number(m.price),qty:1});renderOrder()}
 function qty(i,d){currentOrder.items[i].qty+=d;if(currentOrder.items[i].qty<=0)currentOrder.items.splice(i,1);renderOrder()}
 function total(){return currentOrder.items.reduce((s,x)=>s+x.price*x.qty,0)}
-async function saveOrder(){if(!currentOrder.items.length){alert('กรุณาเลือกเมนูก่อน');return}let old=orders.find(x=>x.table_id===currentOrder.table_id&&x.status!=='จบงาน'&&x.status!=='CLOCK_LOG'&&x.status!=='STAFF_LIST'&&x.status!=='DAILY_SETTLEMENT'&&x.status!=='MANAGER_PWD');let row={table_id:currentOrder.table_id,items:JSON.stringify(currentOrder.items),total:total(),status:old?old.status:'รออาหาร'};if(old)await dbUpdate('orders',old.id,row);else await dbInsert('orders',row);alert('บันทึกออเดอร์แล้ว');await refreshAll();document.getElementById('staffOrder').classList.add('hidden')}
+async function saveOrder(){if(!currentOrder.items.length){alert('กรุณาเลือกเมนูก่อน');return}let old=orders.find(x=>x.table_id===currentOrder.table_id&&x.status!=='จบงาน'&&x.status!=='CLOCK_LOG'&&x.status!=='STAFF_LIST'&&x.status!=='DAILY_SETTLEMENT'&&x.status!=='MANAGER_PWD');let row={table_id:currentOrder.table_id,items:JSON.stringify(currentOrder.items),total:total(),status:old?old.status:'รออาหาร'};if(old)await dbUpdate('uwu_orders',old.id,row);else await dbInsert('uwu_orders',row);alert('บันทึกออเดอร์แล้ว');await refreshAll();document.getElementById('staffOrder').classList.add('hidden')}
 
 async function changeStatus(id){let o=orders.find(x=>x.id===id);let html=`<h3>เปลี่ยนสถานะ — ${tableName(o.table_id)}</h3><div class="field"><select id="newStatus">${statuses.map(s=>`<option ${s===o.status?'selected':''}>${s}</option>`).join('')}</select></div><div class="actions"><button class="btn" onclick="closeModal()">ยกเลิก</button><button class="primary" onclick="saveStatus(${id})">บันทึก</button></div>`;showModal(html)}
-async function saveStatus(id){await dbUpdate('orders',id,{status:document.getElementById('newStatus').value});closeModal();refreshAll()}
-async function deleteOrder(id){if(confirm('ลบออเดอร์นี้ใช่หรือไม่?')){await dbDelete('orders',id);refreshAll()}}
+async function saveStatus(id){await dbUpdate('uwu_orders',id,{status:document.getElementById('newStatus').value});closeModal();refreshAll()}
+async function deleteOrder(id){if(confirm('ลบออเดอร์นี้ใช่หรือไม่?')){await dbDelete('uwu_orders',id);refreshAll()}}
 async function openTableModal(){showModal(`<h3>เพิ่มโต๊ะ</h3><div class="field"><label>ชื่อโต๊ะ</label><input id="tableName" placeholder="เช่น โต๊ะ 1"></div><div class="actions"><button class="btn" onclick="closeModal()">ยกเลิก</button><button class="primary" onclick="addTable()">เพิ่ม</button></div>`)}
-async function addTable(){let n=document.getElementById('tableName').value.trim();if(!n)return;await dbInsert('tables',{name:n});closeModal();refreshAll()}
+async function addTable(){let n=document.getElementById('tableName').value.trim();if(!n)return;await dbInsert('uwu_tables',{name:n});closeModal();refreshAll()}
 async function renameTable(id){let t=tables.find(x=>x.id===id);showModal(`<h3>แก้ชื่อโต๊ะ</h3><div class="field"><input id="tableName" value="${esc(t.name)}"></div><div class="actions"><button class="btn" onclick="closeModal()">ยกเลิก</button><button class="primary" onclick="saveTable(${id})">บันทึก</button></div>`)}
-async function saveTable(id){await dbUpdate('tables',id,{name:document.getElementById('tableName').value.trim()});closeModal();refreshAll()}
-async function deleteTable(id){if(orders.some(o=>o.table_id===id)){alert('โต๊ะนี้มีออเดอร์อยู่ ลบออเดอร์ก่อน');return}if(confirm('ลบโต๊ะนี้ใช่หรือไม่?')){await dbDelete('tables',id);refreshAll()}}
+async function saveTable(id){await dbUpdate('uwu_tables',id,{name:document.getElementById('tableName').value.trim()});closeModal();refreshAll()}
+async function deleteTable(id){if(orders.some(o=>o.table_id===id)){alert('โต๊ะนี้มีออเดอร์อยู่ ลบออเดอร์ก่อน');return}if(confirm('ลบโต๊ะนี้ใช่หรือไม่?')){await dbDelete('uwu_tables',id);refreshAll()}}
 
 async function openMenuModal(m=null){
-  const parsed = m ? parseMenuDesc(m.description) : { img: '', desc: '' };
+  const parsed = m ? parseMenuDesc(m.description) : { img: '', desc: '', cat: '', icon: '' };
   showModal(`
     <h3>${m?'แก้ไข':'เพิ่ม'}เมนู</h3>
     <div class="field"><label>ชื่อเมนู</label><input id="menuName" value="${m?esc(m.name):''}"></div>
@@ -950,7 +956,8 @@ async function openMenuModal(m=null){
       <label>ลิงก์รูปภาพ ( Discord หรือ เว็บฝากรูป )</label>
       <input id="menuImg" placeholder="คัดลอกลิงก์รูปภาพมาวางที่นี่..." value="${esc(parsed.img)}">
     </div>
-    <div class="field"><label>รายละเอียด</label><textarea id="menuDesc">${esc(parsed.desc)}</textarea></div>
+    <div class="field"><label>หมวดหมู่เมนู</label><input id="menuCat" placeholder="เช่น อาหาร, ขนมหวาน" value="${esc(parsed.cat)}"></div>
+    <div class="field"><label>รายละเอียดเพิ่มเติม</label><textarea id="menuDesc">${esc(parsed.desc)}</textarea></div>
     <div class="actions"><button class="btn" onclick="closeModal()">ยกเลิก</button><button class="primary" onclick="${m?`saveMenu(${m.id})`:'addMenu()'}">บันทึก</button></div>
   `);
 }
@@ -959,24 +966,26 @@ async function addMenu(){
   let n=document.getElementById('menuName').value.trim(),
       p=Number(document.getElementById('menuPrice').value),
       img=document.getElementById('menuImg').value.trim(),
+      cat=document.getElementById('menuCat').value.trim(),
       d=document.getElementById('menuDesc').value.trim();
   if(!n||!p)return alert('กรอกชื่อและราคา');
   
-  let fullDesc = img ? `[IMG:${img}] ${d}` : d;
-  await dbInsert('menus',{name:n,price:p,description:fullDesc});
+  let fullDesc = JSON.stringify({ image: img, desc: d, cat: cat || "ทั่วไป", icon: "🍽️" });
+  await dbInsert('uwu_menus',{name:n,price:p,description:fullDesc});
   closeModal();refreshAll();
 }
 async function saveMenu(id){
   let n=document.getElementById('menuName').value.trim(),
       p=Number(document.getElementById('menuPrice').value),
       img=document.getElementById('menuImg').value.trim(),
+      cat=document.getElementById('menuCat').value.trim(),
       d=document.getElementById('menuDesc').value.trim();
       
-  let fullDesc = img ? `[IMG:${img}] ${d}` : d;
-  await dbUpdate('menus',id,{name:n,price:p,description:fullDesc});
+  let fullDesc = JSON.stringify({ image: img, desc: d, cat: cat || "ทั่วไป", icon: "🍽️" });
+  await dbUpdate('uwu_menus',id,{name:n,price:p,description:fullDesc});
   closeModal();refreshAll();
 }
-async function deleteMenu(id){if(confirm('ลบเมนูนี้ใช่หรือไม่?')){await dbDelete('menus',id);refreshAll()}}
+async function deleteMenu(id){if(confirm('ลบเมนูนี้ใช่หรือไม่?')){await dbDelete('uwu_menus',id);refreshAll()}}
 function showModal(h){document.getElementById('modalBox').innerHTML=h;document.getElementById('modal').classList.remove('hidden')}
 function closeModal(){document.getElementById('modal').classList.add('hidden')}
 function money(n){return Number(n||0).toLocaleString('th-TH',{minimumFractionDigits:2})+' ฿'}
