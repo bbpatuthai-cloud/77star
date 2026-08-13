@@ -452,10 +452,11 @@ function renderMembers() {
         imgSrc = 'https://cdn.discordapp.com/attachments/1536627555711455302/1537418624615190528/content.png?ex=6a7ef82b&is=6a7da6ab&hm=ba6b7be994a119eaa175ee53ce2720e910e1ad9b298a9c2d1f953f5b63540316&'; 
     }
 
+    // ปรับให้รูปมีขนาดเล็ก (height:45px) และอยู่ด้านหน้าชื่อระดับสมาชิกในแนวนอนเดียวกัน
     html += `
-      <div style="margin-top:35px; text-align:center;">
-        <img src="${imgSrc}" alt="${lvl} Ticket" style="width:100%; max-width:600px; display:block; margin:0 auto 15px auto; border-radius:15px; box-shadow:0 8px 25px rgba(215, 124, 245, 0.15);">
-        <h3 style="color:${badgeColor}; border-bottom: 2px solid ${badgeColor}; padding-bottom:5px; display:inline-block; margin-top:0;">
+      <div style="margin-top:35px; margin-bottom:15px; display:flex; align-items:center; justify-content:center; gap:10px;">
+        <img src="${imgSrc}" alt="${lvl} Ticket" style="height:45px; width:auto; border-radius:6px; box-shadow:0 4px 10px rgba(0,0,0,0.5);">
+        <h3 style="color:${badgeColor}; border-bottom: 2px solid ${badgeColor}; padding-bottom:5px; margin:0; display:inline-block;">
           ${lvl} (${levelMembers.length} คน)
         </h3>
       </div>
