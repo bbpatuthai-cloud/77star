@@ -793,15 +793,61 @@ async function saveOrder(){
   if(!currentOrder.items.length){alert('กรุณาเลือกเมนูก่อน');return}
   let old=orders.find(x=>x.table_id===currentOrder.table_id&&!['จบงาน','CLOCK_LOG','STAFF_LIST','DAILY_SETTLEMENT','MANAGER_PWD'].includes(x.status));
   let row={table_id:currentOrder.table_id,items:JSON.stringify(currentOrder.items),total:total(),status:old?old.status:'รออาหาร'};
+  
   if(old) await dbUpdate('star_orders',old.id,row);
   else await dbInsert('star_orders',row);
+
+  // --- เพิ่มการแจ้งเตือนเข้า Discord ---
+  sendDiscordWebhook({
+    title: old ? '✏️ มีการอัปเดตออเดอร์' : '📝 รับออเดอร์ใหม่',
+    color: old ? 0xf1c40f : 0x3498db, // สีเหลืองสำหรับอัปเดต, สีฟ้าสำหรับเปิดใหม่
+    fields: [
+      { name: '📍 โต๊ะ', value: tableName(currentOrder.table_id), inline: true },
+      { name: '💰 ยอดรวม', value: money(total()), inline: true },
+      { name: '📋 รายการอาหาร', value: currentOrder.items.map(it => `- ${it.name} (x${it.qty})`).join('\n') || 'ไม่มีข้อมูล', inline: false }
+    ],
+    footer: { text: '★ 77 STAR Order System' },
+    timestamp: new Date().toISOString()
+  });
+  // ------------------------------------
+
   alert('บันทึกออเดอร์แล้ว');
   refreshAll();
   document.getElementById('staffOrder').classList.add('hidden');
 }
 
 async function changeStatus(id){let o=orders.find(x=>x.id===id);let html=`<h3 style="margin-top:0">เปลี่ยนสถานะ — ${tableName(o.table_id)}</h3><div class="field"><select id="newStatus" style="font-size:16px; padding:12px">${statuses.map(s=>`<option ${s===o.status?'selected':''}>${s}</option>`).join('')}</select></div><div class="actions" style="margin-top:20px; gap:10px;"><button class="btn" style="flex:1" onclick="closeModal()">ยกเลิก</button><button class="primary" style="flex:1" onclick="saveStatus(${id})">บันทึก</button></div>`;showModal(html)}
-async function saveStatus(id){await dbUpdate('star_orders',id,{status:document.getElementById('newStatus').value});closeModal();refreshAll()}
+
+async function saveStatus(id){
+  const newStatus = document.getElementById('newStatus').value;
+  await dbUpdate('star_orders',id,{status:newStatus});
+  
+  let o = orders.find(x=>x.id===id);
+  if(o) {
+    // --- เพิ่มการแจ้งเตือนเปลี่ยนสถานะเข้า Discord ---
+    let statusColor = 0x9b59b6; // สีม่วง (ค่าเริ่มต้น)
+    if(newStatus === 'ชำระเงินแล้ว') statusColor = 0x2ecc71; // สีเขียว
+    if(newStatus === 'กำลังทำ') statusColor = 0xe67e22; // สีส้ม
+    if(newStatus === 'จบงาน') statusColor = 0x95a5a6; // สีเทา
+
+    sendDiscordWebhook({
+      title: '🔄 อัปเดตสถานะออเดอร์',
+      color: statusColor,
+      fields: [
+        { name: '📍 โต๊ะ', value: tableName(o.table_id), inline: true },
+        { name: '📌 สถานะใหม่', value: newStatus, inline: true },
+        { name: '💰 ยอดรวมบิลนี้', value: money(o.total), inline: true }
+      ],
+      footer: { text: '★ 77 STAR Status Notification' },
+      timestamp: new Date().toISOString()
+    });
+    // -----------------------------------------------
+  }
+
+  closeModal();
+  refreshAll();
+}
+
 async function deleteOrder(id){if(confirm('ลบออเดอร์นี้ใช่หรือไม่?')){await dbDelete('star_orders',id);refreshAll()}}
 async function openTableModal(){showModal(`<h3>เพิ่มโต๊ะ</h3><div class="field"><label>ชื่อโต๊ะ</label><input id="tableName" placeholder="เช่น โต๊ะ 1"></div><div class="actions"><button class="btn" onclick="closeModal()">ยกเลิก</button><button class="primary" onclick="addTable()">เพิ่ม</button></div>`)}
 async function addTable(){let n=document.getElementById('tableName').value.trim();if(!n)return;await dbInsert('star_tables',{name:n});closeModal();refreshAll()}
