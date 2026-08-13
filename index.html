@@ -13,7 +13,7 @@ button:active{transform:scale(0.96)}
 .top{height:70px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 28px;background:#110c15;position:sticky;top:0;z-index:10}
 .logo{font-size:28px;font-weight:900;color:var(--pink)}.top small{color:var(--muted)}
 .wrap{max-width:1250px;margin:28px auto;padding:0 18px}.hidden{display:none!important}
-.roleGrid{max-width:1000px;margin:90px auto;display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:22px}
+.roleGrid{max-width:1000px;margin:90px auto;display:grid;grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));gap:22px}
 .role{background:var(--card);border:1px solid var(--line);padding:40px 25px;text-align:center;border-radius:20px; transition:0.3s;}.role:hover{border-color:var(--pink); transform:translateY(-5px)}.role h2{font-size:28px; margin-bottom:10px;}.role p{color:var(--muted);min-height:48px; margin-top:0}.role button{width:100%;background:var(--pink);color:#160c1c;font-size:18px}
 .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px}.btn{background:var(--card2);color:#fff;border:1px solid var(--line)}.primary{background:var(--pink);color:#160c1c}.danger{background:#4b1824;color:#fff}.success{background:#173d2b;color:var(--ok)}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:15px}.card{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:18px}.card h3{margin:0 0 8px}.muted{color:var(--muted)}.price{font-size:20px;color:var(--pink);font-weight:800}
@@ -30,8 +30,8 @@ button:active{transform:scale(0.96)}
 
 .tableScrollBox { max-height: 250px; overflow-y: auto; position: relative; border-radius: 8px; }
 .tableScrollBox table { width: 100%; text-align: left; border-collapse: collapse; }
-.tableScrollBox th { position: sticky; top: 0; background: #17111c; z-index: 2; padding: 10px; border-bottom: 1px solid var(--line); color: var(--muted); }
-.tableScrollBox td { padding: 10px; border-bottom: 1px solid #281d2e; }
+.tableScrollBox th { position: sticky; top: 0; background: #17111c; z-index: 2; padding: 10px; border-bottom: 1px solid var(--line); color: var(--muted); white-space: nowrap; }
+.tableScrollBox td { padding: 10px; border-bottom: 1px solid #281d2e; white-space: nowrap; }
 
 .staff-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(250px, 1fr)); gap:15px; }
 
@@ -47,9 +47,11 @@ button:active{transform:scale(0.96)}
 <main class="wrap">
 <section id="rolePage">
   <div class="roleGrid">
-    <div class="role"><div style="font-size:55px">👨‍🍳</div><h2>พนักงาน</h2><p>ลงเวลาเข้า-ออกเวร และดูรายชื่อทีมงานเรียลไทม์</p><button onclick="enterRole('staff_time')">เข้าสู่ระบบพนักงาน</button></div>
-    <div class="role"><div style="font-size:55px">📝</div><h2>รับออเดอร์</h2><p>รับออเดอร์ลูกค้า จัดการโต๊ะ และสถานะอาหาร</p><button onclick="enterRole('staff_order')">เข้าสู่ระบบรับออเดอร์</button></div>
-    <div class="role"><div style="font-size:55px">👑</div><h2>ผู้จัดการ</h2><p>จัดการเมนู พนักงาน ยอดขาย และตั้งค่าระบบ</p><button onclick="enterRole('manager')">เข้าสู่ระบบผู้จัดการ</button></div>
+    <div class="role"><div style="font-size:55px">👨‍🍳</div><h2>พนักงาน</h2><p>ลงเวลาเข้า-ออกเวร และดูรายชื่อทีมงานเรียลไทม์</p><button onclick="enterRole('staff_time')">เข้าระบบพนักงาน</button></div>
+    <div class="role"><div style="font-size:55px">📝</div><h2>รับออเดอร์</h2><p>รับออเดอร์ลูกค้า จัดการโต๊ะ และสถานะอาหาร</p><button onclick="enterRole('staff_order')">เข้าระบบรับออเดอร์</button></div>
+    <div class="role"><div style="font-size:55px">👑</div><h2>ผู้จัดการ</h2><p>จัดการเมนู พนักงาน ยอดขาย และตั้งค่าระบบ</p><button onclick="enterRole('manager')">เข้าระบบผู้จัดการ</button></div>
+    <!-- ปุ่มระบบสมาชิิกใหม่ -->
+    <div class="role"><div style="font-size:55px">💎</div><h2>ระบบสมาชิก</h2><p>จัดการ VIP, VVIP, Super VIP</p><button style="background:#3b82f6; color:#fff;" onclick="enterRole('member')">เข้าระบบสมาชิก</button></div>
   </div>
 </section>
 
@@ -121,7 +123,6 @@ button:active{transform:scale(0.96)}
     </div>
   </div>
 
-  <!-- ตารางต่างๆ ของหน้าผู้จัดการคงเดิม -->
   <div style="margin-bottom:25px">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
       <h3 style="margin:0">📦 รายละเอียดสินค้าที่ขายได้วันนี้</h3>
@@ -189,6 +190,37 @@ button:active{transform:scale(0.96)}
     <div><h3>เมนูอาหาร</h3><div id="managerMenus" class="card"></div></div>
   </div>
 </section>
+
+<!-- หน้าระบบสมาชิก (Membership Page) -->
+<section id="memberPage" class="hidden">
+  <div class="toolbar">
+    <button class="btn" onclick="refreshAll()">↻ อัปเดตข้อมูล</button>
+    <button class="primary" style="background:#3b82f6; color:#fff" onclick="openMemberModal()">＋ เพิ่มสมาชิกใหม่</button>
+  </div>
+  
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px">
+    <h2 style="margin:0">💎 ข้อมูลสมาชิกทั้งหมด</h2>
+  </div>
+  
+  <div class="card tableScrollBox" style="max-height: 600px;">
+    <table>
+      <thead>
+        <tr>
+          <th>Member ID</th>
+          <th>ชื่อ-สกุล</th>
+          <th>เบอร์โทร</th>
+          <th>ระดับ</th>
+          <th>วันที่สมัคร</th>
+          <th>วันหมดอายุ</th>
+          <th>เวลาที่เหลือ</th>
+          <th>จัดการ</th>
+        </tr>
+      </thead>
+      <tbody id="memberList"></tbody>
+    </table>
+  </div>
+</section>
+
 </main>
 
 <div id="modal" class="modal hidden"><div class="modalBox" id="modalBox"></div></div>
@@ -202,7 +234,7 @@ const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/153711308416090535
 </script>
 
 <script>
-let sb=null, role=null, tables=[], menus=[], orders=[], staffList=[], currentOrder={table_id:null,items:[]};
+let sb=null, role=null, tables=[], menus=[], orders=[], staffList=[], members=[], currentOrder={table_id:null,items:[]};
 const statuses=['ยังไม่ชำระเงิน','ชำระเงินแล้ว','รออาหาร','กำลังทำ','เสิร์ฟแล้ว','จบงาน'];
 const cfg=window.SUPABASE_CONFIG||{};
 
@@ -215,6 +247,7 @@ if (sb) {
     .on('postgres_changes', { event: '*', schema: 'public', table: 'star_menus' }, () => refreshAll())
     .on('postgres_changes', { event: '*', schema: 'public', table: 'star_orders' }, () => refreshAll())
     .on('postgres_changes', { event: '*', schema: 'public', table: 'star_staff' }, () => refreshAll())
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'star_members' }, () => refreshAll())
     .subscribe();
 }
 
@@ -285,6 +318,24 @@ async function enterRole(r){
     setTimeout(()=>document.getElementById('managerLoginPwd').focus(), 100);
     return;
   }
+  if (r === 'member') {
+    showModal(`
+      <div style="text-align:center; padding-bottom:10px">
+        <div style="font-size:60px; margin-bottom:10px;">💎</div>
+        <h2 style="margin:0 0 10px; color:#3b82f6">ระบบสมาชิก</h2>
+        <p class="muted">กรุณากรอกรหัสผ่าน (PIN) เพื่อเข้าใช้งาน</p>
+        <div class="field" style="margin:20px 0;">
+          <input type="password" id="memberLoginPwd" placeholder="••••" style="text-align:center; font-size:24px; letter-spacing:8px; padding:15px; border-radius:15px;" onkeypress="if(event.key === 'Enter') verifyMemberLogin()">
+        </div>
+        <div class="actions" style="justify-content:center; gap:15px; margin-top:25px;">
+          <button class="btn" style="flex:1; padding:15px;" onclick="closeModal()">ยกเลิก</button>
+          <button class="primary" style="background:#3b82f6; color:#fff; flex:1; padding:15px;" onclick="verifyMemberLogin()">ยืนยัน</button>
+        </div>
+      </div>
+    `);
+    setTimeout(()=>document.getElementById('memberLoginPwd').focus(), 100);
+    return;
+  }
   proceedToRole(r);
 }
 
@@ -300,12 +351,25 @@ function verifyManagerLogin(correctPwd) {
   }
 }
 
+function verifyMemberLogin() {
+  const input = document.getElementById('memberLoginPwd').value;
+  if (input === '8888') { // ล็อครหัสหน้าเป็น 8888 ตามโจทย์
+    closeModal();
+    proceedToRole('member');
+  } else {
+    alert('❌ รหัสผ่านไม่ถูกต้อง!');
+    document.getElementById('memberLoginPwd').value = '';
+    document.getElementById('memberLoginPwd').focus();
+  }
+}
+
 function proceedToRole(r) {
   role = r;
   document.getElementById('rolePage').classList.add('hidden');
   document.getElementById('staffTimePage').classList.add('hidden');
   document.getElementById('staffOrderPage').classList.add('hidden');
   document.getElementById('managerPage').classList.add('hidden');
+  document.getElementById('memberPage').classList.add('hidden');
 
   if (r === 'staff_time') {
     document.getElementById('staffTimePage').classList.remove('hidden');
@@ -319,6 +383,10 @@ function proceedToRole(r) {
     document.getElementById('managerPage').classList.remove('hidden');
     document.getElementById('modeText').textContent = 'โหมด: ผู้จัดการร้าน';
   }
+  if (r === 'member') {
+    document.getElementById('memberPage').classList.remove('hidden');
+    document.getElementById('modeText').textContent = 'โหมด: ระบบสมาชิก (Membership)';
+  }
 
   document.getElementById('homeBtn').classList.remove('hidden');
   refreshAll();
@@ -330,6 +398,7 @@ document.getElementById('homeBtn').onclick=()=>{
   document.getElementById('staffTimePage').classList.add('hidden');
   document.getElementById('staffOrderPage').classList.add('hidden');
   document.getElementById('managerPage').classList.add('hidden');
+  document.getElementById('memberPage').classList.add('hidden');
   document.getElementById('homeBtn').classList.add('hidden');
   document.getElementById('modeText').textContent='เลือกหมวดหมู่';
 };
@@ -345,9 +414,10 @@ async function refreshAll(){
   menus = await dbGet('star_menus'); 
   orders = await dbGet('star_orders');
   staffList = await dbGet('star_staff');
+  members = await dbGet('star_members');
   
   await loadStaffList();
-  renderStaffListPublic(); // แสดงรายชื่อในหน้าลงเวลา
+  renderStaffListPublic();
   renderTables();
   renderManager();
   calculateTodaySales();
@@ -355,8 +425,175 @@ async function refreshAll(){
   renderDailySummary();
   renderTopItems();
   renderAttendanceList();
+  renderMembers(); // อัปเดตตารางสมาชิก
 }
 
+// ---------------------- ส่วนระบบสมาชิก ----------------------
+function renderMembers() {
+  const el = document.getElementById('memberList');
+  if(!el) return;
+  
+  if(!members.length) {
+    el.innerHTML = '<tr><td colspan="8" class="empty" style="border:none">ยังไม่มีข้อมูลสมาชิก</td></tr>';
+    return;
+  }
+  
+  const now = new Date();
+  // รีเซ็ตเวลาเป็นเที่ยงคืนเพื่อการคำนวณวันที่แม่นยำ
+  now.setHours(0,0,0,0);
+  const nowTime = now.getTime();
+
+  el.innerHTML = members.map(m => {
+    // การคำนวณวันหมดอายุและเวลาที่เหลือ
+    const expDateObj = new Date(m.expiry_date);
+    expDateObj.setHours(0,0,0,0);
+    const expTime = expDateObj.getTime();
+    
+    const diff = expTime - nowTime;
+    let timeStr = '';
+    let statusColor = '';
+    
+    if (diff < 0) {
+      timeStr = '<span class="status" style="background:#4b1824; color:var(--danger)">หมดอายุแล้ว</span>';
+      statusColor = 'var(--danger)';
+    } else {
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      timeStr = `<span class="status" style="background:#173d2b; color:var(--ok)">เหลือ ${days} วัน</span>`;
+      statusColor = 'var(--ok)';
+    }
+
+    // กำหนดสีป้ายตามระดับ
+    let badge = '';
+    if(m.level === 'VIP') badge = `<span class="status" style="background:#1d4ed8; color:#fff; padding:5px 12px">VIP</span>`;
+    if(m.level === 'VVIP') badge = `<span class="status" style="background:#9333ea; color:#fff; padding:5px 12px">VVIP</span>`;
+    if(m.level === 'Super VIP') badge = `<span class="status" style="background:#e11d48; color:#fff; padding:5px 12px">Super VIP</span>`;
+
+    return `
+      <tr>
+        <td style="font-family:monospace; color:var(--pink); font-weight:bold;">${esc(m.member_id)}</td>
+        <td style="font-weight:bold">${esc(m.name)}</td>
+        <td>${esc(m.phone)}</td>
+        <td>${badge}</td>
+        <td style="color:var(--muted)">${new Date(m.join_date).toLocaleDateString('th-TH')}</td>
+        <td style="color:${statusColor}">${new Date(m.expiry_date).toLocaleDateString('th-TH')}</td>
+        <td>${timeStr}</td>
+        <td>
+          <button class="btn" style="padding:5px 10px; font-size:12px; margin-right:5px;" onclick="openMemberModal(${m.id})">✏️ แก้ไข</button>
+          <button class="danger" style="padding:5px 10px; font-size:12px;" onclick="deleteMember(${m.id})">ลบ</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function generateMemberId() {
+  return 'MB' + Math.floor(1000 + Math.random() * 9000);
+}
+
+function openMemberModal(id = null) {
+  let m = id ? members.find(x => x.id === id) : null;
+  
+  // สร้างค่า Default Date
+  let today = new Date();
+  let defaultJoin = today.toISOString().split('T')[0];
+  
+  let nextYear = new Date(today);
+  nextYear.setFullYear(nextYear.getFullYear() + 1); // ปกติอายุสมาชิก 1 ปี
+  let defaultExp = nextYear.toISOString().split('T')[0];
+
+  showModal(`
+    <h3 style="color:#3b82f6">💎 ${m ? 'แก้ไขข้อมูลสมาชิก' : 'ลงทะเบียนสมาชิกใหม่'}</h3>
+    <div class="field">
+      <label>Member ID (รหัสสมาชิก)</label>
+      <input id="memId" value="${m ? esc(m.member_id) : generateMemberId()}" ${m ? 'readonly' : ''} style="${m ? 'color:gray' : 'font-weight:bold'}">
+    </div>
+    <div class="field">
+      <label>ชื่อ-นามสกุล</label>
+      <input id="memName" placeholder="กรอกชื่อสมาชิก" value="${m ? esc(m.name) : ''}">
+    </div>
+    <div class="field">
+      <label>เบอร์โทรศัพท์</label>
+      <input id="memPhone" placeholder="08XXXXXXXX" value="${m ? esc(m.phone) : ''}">
+    </div>
+    <div class="field">
+      <label>ระดับสมาชิก (Level)</label>
+      <select id="memLevel" style="font-weight:bold;">
+        <option value="VIP" ${m && m.level === 'VIP' ? 'selected' : ''}>VIP</option>
+        <option value="VVIP" ${m && m.level === 'VVIP' ? 'selected' : ''}>VVIP</option>
+        <option value="Super VIP" ${m && m.level === 'Super VIP' ? 'selected' : ''}>Super VIP</option>
+      </select>
+    </div>
+    <div class="cols" style="gap:10px">
+      <div class="field" style="margin:0">
+        <label>วันที่สมัคร</label>
+        <input type="date" id="memJoin" value="${m ? new Date(m.join_date).toISOString().split('T')[0] : defaultJoin}">
+      </div>
+      <div class="field" style="margin:0">
+        <label>วันหมดอายุ</label>
+        <input type="date" id="memExp" value="${m ? new Date(m.expiry_date).toISOString().split('T')[0] : defaultExp}">
+      </div>
+    </div>
+    <div class="actions" style="margin-top:25px">
+      <button class="btn" style="flex:1" onclick="closeModal()">ยกเลิก</button>
+      <button class="primary" style="background:#3b82f6; color:#fff; flex:1" onclick="${m ? `saveMember(${m.id})` : 'addMember()'}">💾 บันทึกข้อมูล</button>
+    </div>
+  `);
+}
+
+async function addMember() {
+  const mId = document.getElementById('memId').value.trim();
+  const name = document.getElementById('memName').value.trim();
+  const phone = document.getElementById('memPhone').value.trim();
+  const level = document.getElementById('memLevel').value;
+  const join = document.getElementById('memJoin').value;
+  const exp = document.getElementById('memExp').value;
+
+  if (!name || !phone || !join || !exp) return alert('⚠️ กรุณากรอกข้อมูลให้ครบถ้วน');
+
+  await dbInsert('star_members', {
+    member_id: mId,
+    name: name,
+    phone: phone,
+    level: level,
+    join_date: join,
+    expiry_date: exp
+  });
+  
+  closeModal();
+  refreshAll();
+}
+
+async function saveMember(id) {
+  const name = document.getElementById('memName').value.trim();
+  const phone = document.getElementById('memPhone').value.trim();
+  const level = document.getElementById('memLevel').value;
+  const join = document.getElementById('memJoin').value;
+  const exp = document.getElementById('memExp').value;
+
+  if (!name || !phone || !join || !exp) return alert('⚠️ กรุณากรอกข้อมูลให้ครบถ้วน');
+
+  await dbUpdate('star_members', id, {
+    name: name,
+    phone: phone,
+    level: level,
+    join_date: join,
+    expiry_date: exp
+  });
+  
+  closeModal();
+  refreshAll();
+}
+
+async function deleteMember(id) {
+  if (confirm('⚠️ คุณต้องการลบข้อมูลสมาชิกคนนี้ใช่หรือไม่? การกระทำนี้ไม่สามารถย้อนกลับได้')) {
+    await dbDelete('star_members', id);
+    refreshAll();
+  }
+}
+// -----------------------------------------------------------
+
+
+// [ฟังก์ชันเก่าอื่นๆ ยังคงเดิมทั้งหมดไม่มีการตัดทอน]
 async function loadStaffList(){
   const sel = document.getElementById('staffNameSelect');
   if(sel){
@@ -550,7 +787,6 @@ function renderWorkHoursSummary(logs) {
   `).join('');
 }
 
-// อื่นๆ ของผู้จัดการ (Modal Password, จัดการร้าน, ฯลฯ)
 function openChangePasswordModal() {
   showModal(`
     <h3>🔒 เปลี่ยนรหัสผ่านผู้จัดการ</h3>
@@ -797,10 +1033,9 @@ async function saveOrder(){
   if(old) await dbUpdate('star_orders',old.id,row);
   else await dbInsert('star_orders',row);
 
-  // --- เพิ่มการแจ้งเตือนเข้า Discord ---
   sendDiscordWebhook({
     title: old ? '✏️ มีการอัปเดตออเดอร์' : '📝 รับออเดอร์ใหม่',
-    color: old ? 0xf1c40f : 0x3498db, // สีเหลืองสำหรับอัปเดต, สีฟ้าสำหรับเปิดใหม่
+    color: old ? 0xf1c40f : 0x3498db, 
     fields: [
       { name: '📍 โต๊ะ', value: tableName(currentOrder.table_id), inline: true },
       { name: '💰 ยอดรวม', value: money(total()), inline: true },
@@ -809,7 +1044,6 @@ async function saveOrder(){
     footer: { text: '★ 77 STAR Order System' },
     timestamp: new Date().toISOString()
   });
-  // ------------------------------------
 
   alert('บันทึกออเดอร์แล้ว');
   refreshAll();
@@ -824,11 +1058,10 @@ async function saveStatus(id){
   
   let o = orders.find(x=>x.id===id);
   if(o) {
-    // --- เพิ่มการแจ้งเตือนเปลี่ยนสถานะเข้า Discord ---
-    let statusColor = 0x9b59b6; // สีม่วง (ค่าเริ่มต้น)
-    if(newStatus === 'ชำระเงินแล้ว') statusColor = 0x2ecc71; // สีเขียว
-    if(newStatus === 'กำลังทำ') statusColor = 0xe67e22; // สีส้ม
-    if(newStatus === 'จบงาน') statusColor = 0x95a5a6; // สีเทา
+    let statusColor = 0x9b59b6; 
+    if(newStatus === 'ชำระเงินแล้ว') statusColor = 0x2ecc71; 
+    if(newStatus === 'กำลังทำ') statusColor = 0xe67e22; 
+    if(newStatus === 'จบงาน') statusColor = 0x95a5a6; 
 
     sendDiscordWebhook({
       title: '🔄 อัปเดตสถานะออเดอร์',
@@ -841,7 +1074,6 @@ async function saveStatus(id){
       footer: { text: '★ 77 STAR Status Notification' },
       timestamp: new Date().toISOString()
     });
-    // -----------------------------------------------
   }
 
   closeModal();
