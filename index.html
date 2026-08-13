@@ -620,11 +620,32 @@ async function deleteDayWorkLog(dateKey, name, ids){
 function openStaffModal(){
   showModal(`
     <h3>👑 จัดการรายชื่อพนักงาน</h3>
-    <div class="field"><label>เพิ่มพนักงานใหม่</label><input id="newStaffName" placeholder="กรอกชื่อพนักงาน"></div>
-    <button class="primary" style="width:100%; margin-bottom:15px" onclick="addStaff()">＋ เพิ่มพนักงาน</button>
+    <div class="cols" style="gap:10px">
+      <div class="field" style="margin:0"><label>ชื่อพนักงานใหม่</label><input id="newStaffName" placeholder="กรอกชื่อพนักงาน"></div>
+      <div class="field" style="margin:0">
+        <label>ตำแหน่ง</label>
+        <select id="newStaffRole">
+          <option value="พนักงานเสิร์ฟ">พนักงานเสิร์ฟ</option>
+          <option value="เจ้าของร้าน">เจ้าของร้าน</option>
+          <option value="ผู้จัดการร้าน">ผู้จัดการร้าน</option>
+          <option value="บาร์เทนเดอร์">บาร์เทนเดอร์</option>
+          <option value="Security">Security</option>
+          <option value="พีอาร์">พีอาร์</option>
+        </select>
+      </div>
+    </div>
+    <button class="primary" style="width:100%; margin:15px 0" onclick="addStaff()">＋ เพิ่มพนักงาน</button>
     <h4>รายชื่อพนักงานปัจจุบัน</h4>
     <div style="max-height:180px; overflow-y:auto">
-      ${staffList.map(s => `<div class="menuItem"><span>${esc(s.name)}</span><button class="danger" onclick="removeStaff(${s.id})">ลบ</button></div>`).join('')}
+      ${staffList.map(s => `
+        <div class="menuItem">
+          <div>
+            <b>${esc(s.name)}</b> 
+            <span class="status" style="margin-left:8px; background:#4b3650; color:#fff;">${esc(s.role || 'พนักงานเสิร์ฟ')}</span>
+          </div>
+          <button class="danger" onclick="removeStaff(${s.id})">ลบ</button>
+        </div>
+      `).join('')}
     </div>
     <div class="actions" style="margin-top:15px"><button class="btn" onclick="closeModal()">ปิด</button></div>
   `);
@@ -632,10 +653,11 @@ function openStaffModal(){
 
 async function addStaff(){
   const name = document.getElementById('newStaffName').value.trim();
+  const role = document.getElementById('newStaffRole').value;
   if(!name) return;
   await dbInsert('star_staff', {
     name: name,
-    role: 'พนักงานเสิร์ฟ',
+    role: role,
     status: 'กำลังทำงาน',
     attendance: 'ยังไม่เข้าเวร',
     attendance_time: '-'
