@@ -50,7 +50,6 @@ button:active{transform:scale(0.96)}
     <div class="role"><div style="font-size:55px">👨‍🍳</div><h2>พนักงาน</h2><p>ลงเวลาเข้า-ออกเวร และดูรายชื่อทีมงานเรียลไทม์</p><button onclick="enterRole('staff_time')">เข้าระบบพนักงาน</button></div>
     <div class="role"><div style="font-size:55px">📝</div><h2>รับออเดอร์</h2><p>รับออเดอร์ลูกค้า จัดการโต๊ะ และสถานะอาหาร</p><button onclick="enterRole('staff_order')">เข้าระบบรับออเดอร์</button></div>
     <div class="role"><div style="font-size:55px">👑</div><h2>ผู้จัดการ</h2><p>จัดการเมนู พนักงาน ยอดขาย และตั้งค่าระบบ</p><button onclick="enterRole('manager')">เข้าระบบผู้จัดการ</button></div>
-    <!-- ปุ่มระบบสมาชิิกใหม่ -->
     <div class="role"><div style="font-size:55px">💎</div><h2>ระบบสมาชิก</h2><p>จัดการ VIP, VVIP, Super VIP</p><button style="background:#3b82f6; color:#fff;" onclick="enterRole('member')">เข้าระบบสมาชิก</button></div>
   </div>
 </section>
@@ -202,23 +201,8 @@ button:active{transform:scale(0.96)}
     <h2 style="margin:0">💎 ข้อมูลสมาชิกทั้งหมด</h2>
   </div>
   
-  <div class="card tableScrollBox" style="max-height: 600px;">
-    <table>
-      <thead>
-        <tr>
-          <th>Member ID</th>
-          <th>ชื่อ-สกุล</th>
-          <th>เบอร์โทร</th>
-          <th>ระดับ</th>
-          <th>วันที่สมัคร</th>
-          <th>วันหมดอายุ</th>
-          <th>เวลาที่เหลือ</th>
-          <th>จัดการ</th>
-        </tr>
-      </thead>
-      <tbody id="memberList"></tbody>
-    </table>
-  </div>
+  <!-- แสดงแยกตามหมวดหมู่ จะถูกสร้างจาก JavaScript -->
+  <div id="memberGroups"></div>
 </section>
 
 </main>
@@ -430,11 +414,11 @@ async function refreshAll(){
 
 // ---------------------- ส่วนระบบสมาชิก ----------------------
 function renderMembers() {
-  const el = document.getElementById('memberList');
-  if(!el) return;
+  const container = document.getElementById('memberGroups');
+  if(!container) return;
   
   if(!members.length) {
-    el.innerHTML = '<tr><td colspan="8" class="empty" style="border:none">ยังไม่มีข้อมูลสมาชิก</td></tr>';
+    container.innerHTML = '<div class="empty" style="border:none">ยังไม่มีข้อมูลสมาชิก</div>';
     return;
   }
   
@@ -443,47 +427,92 @@ function renderMembers() {
   now.setHours(0,0,0,0);
   const nowTime = now.getTime();
 
-  el.innerHTML = members.map(m => {
-    // การคำนวณวันหมดอายุและเวลาที่เหลือ
-    const expDateObj = new Date(m.expiry_date);
-    expDateObj.setHours(0,0,0,0);
-    const expTime = expDateObj.getTime();
-    
-    const diff = expTime - nowTime;
-    let timeStr = '';
-    let statusColor = '';
-    
-    if (diff < 0) {
-      timeStr = '<span class="status" style="background:#4b1824; color:var(--danger)">หมดอายุแล้ว</span>';
-      statusColor = 'var(--danger)';
-    } else {
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      timeStr = `<span class="status" style="background:#173d2b; color:var(--ok)">เหลือ ${days} วัน</span>`;
-      statusColor = 'var(--ok)';
+  // กำหนดลำดับระดับสมาชิกที่จะแสดง
+  const levels = ['Super VIP', 'VVIP', 'VIP'];
+  let html = '';
+
+  levels.forEach(lvl => {
+    // กรองหาสมาชิกเฉพาะกลุ่มนั้นๆ
+    const levelMembers = members.filter(m => m.level === lvl);
+    if(levelMembers.length === 0) return;
+
+    let badgeColor = '';
+    let imgSrc = '';
+    if(lvl === 'VIP') { 
+        badgeColor = '#1d4ed8'; 
+        imgSrc = 'image_6d6d40.jpg'; 
+    }
+    if(lvl === 'VVIP') { 
+        badgeColor = '#9333ea'; 
+        imgSrc = 'image_6d6d45.jpg'; 
+    }
+    if(lvl === 'Super VIP') { 
+        badgeColor = '#e11d48'; 
+        imgSrc = 'image_6d6d5e.jpg'; 
     }
 
-    // กำหนดสีป้ายตามระดับ
-    let badge = '';
-    if(m.level === 'VIP') badge = `<span class="status" style="background:#1d4ed8; color:#fff; padding:5px 12px">VIP</span>`;
-    if(m.level === 'VVIP') badge = `<span class="status" style="background:#9333ea; color:#fff; padding:5px 12px">VVIP</span>`;
-    if(m.level === 'Super VIP') badge = `<span class="status" style="background:#e11d48; color:#fff; padding:5px 12px">Super VIP</span>`;
-
-    return `
-      <tr>
-        <td style="font-family:monospace; color:var(--pink); font-weight:bold;">${esc(m.member_id)}</td>
-        <td style="font-weight:bold">${esc(m.name)}</td>
-        <td>${esc(m.phone)}</td>
-        <td>${badge}</td>
-        <td style="color:var(--muted)">${new Date(m.join_date).toLocaleDateString('th-TH')}</td>
-        <td style="color:${statusColor}">${new Date(m.expiry_date).toLocaleDateString('th-TH')}</td>
-        <td>${timeStr}</td>
-        <td>
-          <button class="btn" style="padding:5px 10px; font-size:12px; margin-right:5px;" onclick="openMemberModal(${m.id})">✏️ แก้ไข</button>
-          <button class="danger" style="padding:5px 10px; font-size:12px;" onclick="deleteMember(${m.id})">ลบ</button>
-        </td>
-      </tr>
+    html += `
+      <div style="margin-top:35px; text-align:center;">
+        <img src="${imgSrc}" alt="${lvl} Ticket" style="width:100%; max-width:600px; display:block; margin:0 auto 15px auto; border-radius:15px; box-shadow:0 8px 25px rgba(215, 124, 245, 0.15);">
+        <h3 style="color:${badgeColor}; border-bottom: 2px solid ${badgeColor}; padding-bottom:5px; display:inline-block; margin-top:0;">
+          ${lvl} (${levelMembers.length} คน)
+        </h3>
+      </div>
+      <div class="card tableScrollBox" style="margin-bottom:25px; max-height:400px;">
+        <table>
+          <thead>
+            <tr>
+              <th>Member ID</th>
+              <th>ชื่อ-สกุล</th>
+              <th>เบอร์โทร</th>
+              <th>วันที่สมัคร</th>
+              <th>วันหมดอายุ</th>
+              <th>เวลาที่เหลือ</th>
+              <th>จัดการ</th>
+            </tr>
+          </thead>
+          <tbody>
     `;
-  }).join('');
+
+    html += levelMembers.map(m => {
+      // การคำนวณวันหมดอายุและเวลาที่เหลือ
+      const expDateObj = new Date(m.expiry_date);
+      expDateObj.setHours(0,0,0,0);
+      const expTime = expDateObj.getTime();
+      
+      const diff = expTime - nowTime;
+      let timeStr = '';
+      let statusColor = '';
+      
+      if (diff < 0) {
+        timeStr = '<span class="status" style="background:#4b1824; color:var(--danger)">หมดอายุแล้ว</span>';
+        statusColor = 'var(--danger)';
+      } else {
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        timeStr = `<span class="status" style="background:#173d2b; color:var(--ok)">เหลือ ${days} วัน</span>`;
+        statusColor = 'var(--ok)';
+      }
+
+      return `
+        <tr>
+          <td style="font-family:monospace; color:var(--pink); font-weight:bold;">${esc(m.member_id)}</td>
+          <td style="font-weight:bold">${esc(m.name)}</td>
+          <td>${esc(m.phone)}</td>
+          <td style="color:var(--muted)">${new Date(m.join_date).toLocaleDateString('th-TH')}</td>
+          <td style="color:${statusColor}">${new Date(m.expiry_date).toLocaleDateString('th-TH')}</td>
+          <td>${timeStr}</td>
+          <td>
+            <button class="btn" style="padding:5px 10px; font-size:12px; margin-right:5px;" onclick="openMemberModal(${m.id})">✏️ แก้ไข</button>
+            <button class="danger" style="padding:5px 10px; font-size:12px;" onclick="deleteMember(${m.id})">ลบ</button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    html += `</tbody></table></div>`;
+  });
+
+  container.innerHTML = html;
 }
 
 function generateMemberId() {
@@ -497,9 +526,10 @@ function openMemberModal(id = null) {
   let today = new Date();
   let defaultJoin = today.toISOString().split('T')[0];
   
-  let nextYear = new Date(today);
-  nextYear.setFullYear(nextYear.getFullYear() + 1); // ปกติอายุสมาชิก 1 ปี
-  let defaultExp = nextYear.toISOString().split('T')[0];
+  // ปรับให้หมดอายุ 1 เดือนถัดไปโดยอัตโนมัติ
+  let nextMonth = new Date(today);
+  nextMonth.setMonth(nextMonth.getMonth() + 1);
+  let defaultExp = nextMonth.toISOString().split('T')[0];
 
   showModal(`
     <h3 style="color:#3b82f6">💎 ${m ? 'แก้ไขข้อมูลสมาชิก' : 'ลงทะเบียนสมาชิกใหม่'}</h3>
@@ -592,8 +622,7 @@ async function deleteMember(id) {
 }
 // -----------------------------------------------------------
 
-
-// [ฟังก์ชันเก่าอื่นๆ ยังคงเดิมทั้งหมดไม่มีการตัดทอน]
+// [ฟังก์ชันอื่นๆ คงเดิม]
 async function loadStaffList(){
   const sel = document.getElementById('staffNameSelect');
   if(sel){
