@@ -23,8 +23,8 @@ button,input,select,textarea{font:inherit}button{cursor:pointer;border:0;border-
 .modal{position:fixed;inset:0;background:#000b;display:flex;align-items:center;justify-content:center;padding:20px;z-index:50}.modalBox{width:min(600px,100%);background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px;max-height:90vh;overflow-y:auto}
 .dashboard{background:linear-gradient(135deg, #211626 0%, #17111c 100%);border:1px solid var(--pink);border-radius:18px;padding:22px;margin-bottom:25px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:15px}
 .dashStat{display:flex;flex-direction:column}.dashStat span{color:var(--muted);font-size:14px}.dashStat strong{font-size:32px;color:var(--pink);font-weight:900}
-.menuImg{width:100%;height:130px;object-fit:cover;border-radius:10px;margin-bottom:10px;background:#100b14;border:1px solid var(--line)}
-.menuThumb{width:48px;height:48px;object-fit:cover;border-radius:8px;background:#100b14;border:1px solid var(--line);flex-shrink:0}
+.menuImg{width:100%;height:130px;object-fit:cover;border-radius:10px;margin-bottom:10px;background:#100b14;border:1px solid var(--line);color:var(--muted);text-align:center;line-height:130px;font-size:12px}
+.menuThumb{width:48px;height:48px;object-fit:cover;border-radius:8px;background:#100b14;border:1px solid var(--line);flex-shrink:0;color:var(--muted);font-size:10px;text-align:center;line-height:48px}
 
 /* กำหนด Scrollbar และตรึงหัวตารางไม่ให้ดันหน้า */
 .tableScrollBox { max-height: 250px; overflow-y: auto; position: relative; border-radius: 8px; }
@@ -252,26 +252,29 @@ async function sendDiscordWebhook(embedData) {
   }
 }
 
-function parseMenuDesc(descText) {
-  if (!descText) return { img: '', desc: '', cat: '', icon: '' };
+// ฟังก์ชันแปลงข้อมูลเมนูเพื่อดึงรููปภาพโดยไม่ทำลายลิงก์ต้นฉบับ
+function parseMenu(m) {
+  if (!m) return { img: '', desc: '', cat: '', icon: '' };
+  let rawImg = m.image || ''; // รองรับคอลัมน์ image ตรงๆ เผื่อฐานข้อมูลมี
+  let descText = m.description || '';
+  let finalDesc = descText;
+  let finalCat = '';
+  let finalIcon = '';
+
   try {
     const parsed = JSON.parse(descText);
-    let rawUrl = parsed.image || '';
-    if (rawUrl.includes('discordapp.com/attachments/') || rawUrl.includes('discordapp.net/attachments/')) {
-      rawUrl = rawUrl.replace('cdn.discordapp.com', 'media.discordapp.net');
-    }
-    return { img: rawUrl, desc: parsed.desc || '', cat: parsed.cat || '', icon: parsed.icon || '' };
+    if(parsed.image) rawImg = parsed.image;
+    finalDesc = parsed.desc || '';
+    finalCat = parsed.cat || '';
+    finalIcon = parsed.icon || '';
   } catch(e) {
     const match = descText.match(/\[IMG:(.*?)\]/);
     if (match) {
-      let rawUrl = match[1];
-      if (rawUrl.includes('discordapp.com/attachments/') || rawUrl.includes('discordapp.net/attachments/')) {
-        rawUrl = rawUrl.replace('cdn.discordapp.com', 'media.discordapp.net');
-      }
-      return { img: rawUrl, desc: descText.replace(/\[IMG:.*?\]/, '').trim(), cat: '', icon: '' };
+      rawImg = match[1];
+      finalDesc = descText.replace(/\[IMG:.*?\]/, '').trim();
     }
-    return { img: '', desc: descText, cat: '', icon: '' };
   }
+  return { img: rawImg, desc: finalDesc, cat: finalCat, icon: finalIcon };
 }
 
 async function getManagerPassword() {
@@ -680,7 +683,7 @@ function getTodaySoldItemsData(){
         
         const foundMenu = menus.find(m => m.name === it.name);
         if(foundMenu) {
-          const parsed = parseMenuDesc(foundMenu.description);
+          const parsed = parseMenu(foundMenu);
           itemStats[it.name].image_url = parsed.img;
         }
       });
@@ -708,7 +711,7 @@ function renderTodaySoldItems(){
 
   el.innerHTML = soldItems.map(item => `
     <tr>
-      <td>${item.image_url ? `<img src="${esc(item.image_url)}" class="menuThumb" onerror="this.style.display='none'">` : '-'}</td>
+      <td>${item.image_url ? `<img src="${esc(item.image_url)}" class="menuThumb" alt="Image">` : '-'}</td>
       <td><b>${esc(item.name)}</b></td>
       <td><b>${item.qty}</b> จาน/ชิ้น</td>
       <td style="color:var(--pink); font-weight:bold">${money(item.total)}</td>
@@ -738,7 +741,7 @@ function viewTodaySoldItems(){
         ${soldItems.map(it => `
           <div class="menuItem">
             <div style="display:flex; align-items:center; gap:10px">
-              ${it.image_url ? `<img src="${esc(it.image_url)}" class="menuThumb">` : ''}
+              ${it.image_url ? `<img src="${esc(it.image_url)}" class="menuThumb" alt="Img">` : ''}
               <div>
                 <b>${esc(it.name)}</b>
                 <div class="muted">ขายได้ ${it.qty} รายการ</div>
@@ -899,7 +902,7 @@ function renderTopItems(){
         
         const foundMenu = menus.find(m => m.name === it.name);
         if(foundMenu) {
-          const parsed = parseMenuDesc(foundMenu.description);
+          const parsed = parseMenu(foundMenu);
           itemStats[it.name].image_url = parsed.img;
         }
       });
@@ -922,7 +925,7 @@ function renderTopItems(){
     <tr>
       <td style="font-weight:bold; color:var(--pink)">#${idx + 1}</td>
       <td style="display:flex; align-items:center; gap:10px">
-        ${item.image_url ? `<img src="${esc(item.image_url)}" class="menuThumb" onerror="this.style.display='none'">` : ''}
+        ${item.image_url ? `<img src="${esc(item.image_url)}" class="menuThumb" alt="img">` : ''}
         <b>${esc(item.name)}</b>
       </td>
       <td><b>${item.qty}</b> จาน/ชิ้น</td>
@@ -947,8 +950,8 @@ function renderManager(){
  const te=document.getElementById('managerTables'), me=document.getElementById('managerMenus'); if(!te)return;
  te.innerHTML=tables.length?tables.map(t=>{let o=orders.find(x=>x.table_id===t.id&&x.status!=='จบงาน'&&x.status!=='CLOCK_LOG'&&x.status!=='STAFF_LIST'&&x.status!=='DAILY_SETTLEMENT'&&x.status!=='MANAGER_PWD');return `<div class="card"><h3>${esc(t.name)}</h3>${o?`<div>${statusClass(o.status)}<br><b>${money(o.total)}</b></div><div class="actions"><button class="btn" onclick="changeStatus(${o.id})">สถานะ</button><button class="danger" onclick="deleteOrder(${o.id})">ลบออเดอร์</button></div>`:'<div class="muted">ว่าง</div>'}<div class="actions"><button class="btn" onclick="renameTable(${t.id})">แก้ชื่อ</button><button class="danger" onclick="deleteTable(${t.id})">ลบโต๊ะ</button></div></div>`}).join(''):'<div class="empty">ยังไม่มีโต๊ะ</div>';
  me.innerHTML=menus.length?menus.map(m=>{
-    const parsed = parseMenuDesc(m.description);
-    return `<div class="menuItem"><div style="display:flex; gap:12px; align-items:center">${parsed.img?`<img src="${esc(parsed.img)}" class="menuThumb" onerror="this.style.display='none'">`:''}<div><b>${esc(m.name)}</b><div class="muted">${esc(parsed.desc||'')}</div></div></div><div class="row"><span class="price">${money(m.price)}</span><button class="btn" onclick="editMenu(${m.id})">แก้</button><button class="danger" onclick="deleteMenu(${m.id})">ลบ</button></div></div>`
+    const parsed = parseMenu(m);
+    return `<div class="menuItem"><div style="display:flex; gap:12px; align-items:center">${parsed.img?`<img src="${esc(parsed.img)}" class="menuThumb" alt="img">`:''}<div><b>${esc(m.name)}</b><div class="muted">${esc(parsed.desc||'')}</div></div></div><div class="row"><span class="price">${money(m.price)}</span><button class="btn" onclick="editMenu(${m.id})">แก้</button><button class="danger" onclick="deleteMenu(${m.id})">ลบ</button></div></div>`
  }).join(''):'<div class="empty">ยังไม่มีเมนู</div>';
 }
 
@@ -957,8 +960,8 @@ function openOrder(){if(!tables.length){alert('ยังไม่มีโต๊
 function renderOrder(){
  const p=document.getElementById('staffOrder');p.classList.remove('hidden');
  p.innerHTML=`<h3>ออเดอร์ — ${tableName(currentOrder.table_id)}</h3><div class="grid">${menus.map(m=>{
-    const parsed = parseMenuDesc(m.description);
-    return `<div class="card">${parsed.img?`<img src="${esc(parsed.img)}" class="menuImg" onerror="this.style.display='none'">`:''}<b>${esc(m.name)}</b><div class="price">${money(m.price)}</div><button class="primary" onclick="addItem(${m.id})">＋ เพิ่ม</button></div>`
+    const parsed = parseMenu(m);
+    return `<div class="card">${parsed.img?`<img src="${esc(parsed.img)}" class="menuImg" alt="Broken Link">`:''}<b>${esc(m.name)}</b><div class="price">${money(m.price)}</div><button class="primary" onclick="addItem(${m.id})">＋ เพิ่ม</button></div>`
  }).join('')}</div><div style="margin-top:20px"><h3>รายการ</h3>${currentOrder.items.length?currentOrder.items.map((it,i)=>`<div class="menuItem"><div>${esc(it.name)} × ${it.qty}</div><div class="row"><b>${money(it.price*it.qty)}</b><button class="btn" onclick="qty(${i},-1)">−</button><button class="btn" onclick="qty(${i},1)">＋</button></div></div>`).join(''):'<div class="empty">ยังไม่มีรายการ</div>'}</div><div class="row" style="justify-content:space-between;margin-top:18px"><div class="total">${money(total())}</div><div class="row"><button class="btn" onclick="document.getElementById('staffOrder').classList.add('hidden')">ปิด</button><button class="primary" onclick="saveOrder()">บันทึกออเดอร์</button></div></div>`;
 }
 function addItem(id){let m=menus.find(x=>x.id===id),it=currentOrder.items.find(x=>x.menu_id===id);if(it)it.qty++;else currentOrder.items.push({menu_id:id,name:m.name,price:Number(m.price),qty:1});renderOrder()}
@@ -1003,7 +1006,7 @@ async function saveTable(id){await dbUpdate('star_tables',id,{name:document.getE
 async function deleteTable(id){if(orders.some(o=>o.table_id===id)){alert('โต๊ะนี้มีออเดอร์อยู่ ลบออเดอร์ก่อน');return}if(confirm('ลบโต๊ะนี้ใช่หรือไม่?')){await dbDelete('star_tables',id);refreshAll()}}
 
 async function openMenuModal(m=null){
-  const parsed = m ? parseMenuDesc(m.description) : { img: '', desc: '', cat: '', icon: '' };
+  const parsed = m ? parseMenu(m) : { img: '', desc: '', cat: '', icon: '' };
   showModal(`
     <h3>${m?'แก้ไข':'เพิ่ม'}เมนู</h3>
     <div class="field"><label>ชื่อเมนู</label><input id="menuName" value="${m?esc(m.name):''}"></div>
