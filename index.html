@@ -215,6 +215,7 @@ window.SUPABASE_CONFIG = {
   publishableKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFwdHlodWxqb3Buc2lxbXZkbG94Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY0NzUwNzEsImV4cCI6MjEwMjA1MTA3MX0.5kzUU3eQGyBj_ke15hSKHqg2ahbOuFLDK7_JHlR80Ns"
 };
 const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1537113084160905357/MbjfEtSs2XrsycxJVVw3f3G5o54kgypBzs8FOu-zUIS-hrqT6SKmvbKW33Owdb1U6N_s";
+const DISCORD_WEBHOOK_MEMBER_URL = "https://discord.com/api/webhooks/1537430359736586330/VoaGwabPZ_2b6x_-oWt5cb8Ngap4GWiHg0XJtKyfbVUn3HC7ckQVcMhMLpl0MbPYAgef";
 </script>
 
 <script>
@@ -235,10 +236,10 @@ if (sb) {
     .subscribe();
 }
 
-async function sendDiscordWebhook(embedData) {
-  if (!DISCORD_WEBHOOK_URL) return;
+async function sendDiscordWebhook(embedData, url = DISCORD_WEBHOOK_URL) {
+  if (!url) return;
   try {
-    await fetch(DISCORD_WEBHOOK_URL, {
+    await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ embeds: [embedData] })
@@ -589,11 +590,27 @@ async function addMember() {
     expiry_date: exp
   });
   
+  // แจ้งเตือนไปยัง Webhook ของระบบสมาชิก
+  sendDiscordWebhook({
+    title: '💎 สมัครสมาชิกใหม่',
+    color: level === 'Super VIP' ? 0xe11d48 : (level === 'VVIP' ? 0x9333ea : 0x1d4ed8),
+    fields: [
+      { name: 'รหัสสมาชิก', value: mId, inline: true },
+      { name: 'ชื่อ-นามสกุล', value: name, inline: true },
+      { name: 'ระดับ', value: level, inline: true },
+      { name: 'เบอร์โทร', value: phone, inline: true },
+      { name: 'วันหมดอายุ', value: new Date(exp).toLocaleDateString('th-TH'), inline: true }
+    ],
+    footer: { text: '★ 77 STAR Membership System' },
+    timestamp: new Date().toISOString()
+  }, DISCORD_WEBHOOK_MEMBER_URL);
+
   closeModal();
   refreshAll();
 }
 
 async function saveMember(id) {
+  let oldData = members.find(x => x.id === id);
   const name = document.getElementById('memName').value.trim();
   const phone = document.getElementById('memPhone').value.trim();
   const level = document.getElementById('memLevel').value;
@@ -610,19 +627,50 @@ async function saveMember(id) {
     expiry_date: exp
   });
   
+  // แจ้งเตือนอัปเดตไปยัง Webhook ของระบบสมาชิก
+  sendDiscordWebhook({
+    title: '✏️ อัปเดตข้อมูลสมาชิก',
+    color: 0xf1c40f,
+    fields: [
+      { name: 'รหัสสมาชิก', value: oldData ? oldData.member_id : 'ไม่ทราบรหัส', inline: true },
+      { name: 'ชื่อ-นามสกุล', value: name, inline: true },
+      { name: 'ระดับ', value: level, inline: true },
+      { name: 'วันหมดอายุ', value: new Date(exp).toLocaleDateString('th-TH'), inline: true }
+    ],
+    footer: { text: '★ 77 STAR Membership System' },
+    timestamp: new Date().toISOString()
+  }, DISCORD_WEBHOOK_MEMBER_URL);
+
   closeModal();
   refreshAll();
 }
 
 async function deleteMember(id) {
+  let m = members.find(x => x.id === id);
   if (confirm('⚠️ คุณต้องการลบข้อมูลสมาชิกคนนี้ใช่หรือไม่? การกระทำนี้ไม่สามารถย้อนกลับได้')) {
     await dbDelete('star_members', id);
+    
+    // แจ้งเตือนการลบไปยัง Webhook ของระบบสมาชิก
+    if (m) {
+      sendDiscordWebhook({
+        title: '🗑️ ลบข้อมูลสมาชิก',
+        color: 0xff7d91,
+        fields: [
+          { name: 'รหัสสมาชิก', value: m.member_id, inline: true },
+          { name: 'ชื่อ-นามสกุล', value: m.name, inline: true },
+          { name: 'ระดับที่เคยอยู่', value: m.level, inline: true }
+        ],
+        footer: { text: '★ 77 STAR Membership System' },
+        timestamp: new Date().toISOString()
+      }, DISCORD_WEBHOOK_MEMBER_URL);
+    }
+    
     refreshAll();
   }
 }
 // -----------------------------------------------------------
 
-// [ฟังก์ชันอื่นๆ คงเดิม]
+// [ฟังก์ชันอื่นๆ คงเดิมทั้งหมด]
 async function loadStaffList(){
   const sel = document.getElementById('staffNameSelect');
   if(sel){
