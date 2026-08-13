@@ -8,31 +8,34 @@
 <style>
 :root{--bg:#0d0a10;--card:#17111c;--card2:#211626;--line:#4b3650;--pink:#d77cf5;--text:#fff;--muted:#bbaec1;--ok:#79e2a7;--danger:#ff7d91}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,sans-serif}
-button,input,select,textarea{font:inherit}button{cursor:pointer;border:0;border-radius:10px;padding:11px 15px;font-weight:700}
+button,input,select,textarea{font:inherit}button{cursor:pointer;border:0;border-radius:10px;padding:11px 15px;font-weight:700;transition:0.2s}
+button:active{transform:scale(0.96)}
 .top{height:70px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 28px;background:#110c15;position:sticky;top:0;z-index:10}
 .logo{font-size:28px;font-weight:900;color:var(--pink)}.top small{color:var(--muted)}
 .wrap{max-width:1250px;margin:28px auto;padding:0 18px}.hidden{display:none!important}
-.roleGrid{max-width:800px;margin:90px auto;display:grid;grid-template-columns:1fr 1fr;gap:22px}
-.role{background:var(--card);border:1px solid var(--line);padding:40px 25px;text-align:center;border-radius:20px}.role h2{font-size:28px}.role p{color:var(--muted);min-height:48px}.role button{width:100%;background:var(--pink);color:#160c1c;font-size:18px}
+.roleGrid{max-width:1000px;margin:90px auto;display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:22px}
+.role{background:var(--card);border:1px solid var(--line);padding:40px 25px;text-align:center;border-radius:20px; transition:0.3s;}.role:hover{border-color:var(--pink); transform:translateY(-5px)}.role h2{font-size:28px; margin-bottom:10px;}.role p{color:var(--muted);min-height:48px; margin-top:0}.role button{width:100%;background:var(--pink);color:#160c1c;font-size:18px}
 .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px}.btn{background:var(--card2);color:#fff;border:1px solid var(--line)}.primary{background:var(--pink);color:#160c1c}.danger{background:#4b1824;color:#fff}.success{background:#173d2b;color:var(--ok)}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:15px}.card{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:18px}.card h3{margin:0 0 8px}.muted{color:var(--muted)}.price{font-size:20px;color:var(--pink);font-weight:800}
-.tableCard{position:relative}.status{display:inline-block;padding:5px 9px;border-radius:20px;background:#302438;font-size:12px}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.tableCard{position:relative}.status{display:inline-block;padding:5px 9px;border-radius:20px;background:#302438;font-size:12px}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px; justify-content:center}
 .menuItem{display:flex;justify-content:space-between;gap:10px;align-items:center;border-bottom:1px solid #322638;padding:11px 0}.menuItem:last-child{border:0}
 .orderPanel{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:18px;margin-top:20px}.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.field{margin:9px 0}.field label{display:block;color:var(--muted);margin-bottom:5px}.field input,.field select,.field textarea{width:100%;background:#0c0910;color:#fff;border:1px solid var(--line);padding:10px;border-radius:9px}.field textarea{min-height:70px}
+.field input:focus, .field select:focus {border-color:var(--pink); outline:none;}
 .cols{display:grid;grid-template-columns:1.1fr .9fr;gap:18px}.total{font-size:28px;color:var(--pink);font-weight:900}.empty{padding:30px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:12px}
-.modal{position:fixed;inset:0;background:#000b;display:flex;align-items:center;justify-content:center;padding:20px;z-index:50}.modalBox{width:min(600px,100%);background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px;max-height:90vh;overflow-y:auto}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,0.8);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:20px;z-index:50}.modalBox{width:min(500px,100%);background:var(--card);border:1px solid var(--pink);border-radius:24px;padding:30px;max-height:90vh;overflow-y:auto; box-shadow:0 15px 35px rgba(215,124,245,0.15);}
 .dashboard{background:linear-gradient(135deg, #211626 0%, #17111c 100%);border:1px solid var(--pink);border-radius:18px;padding:22px;margin-bottom:25px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:15px}
 .dashStat{display:flex;flex-direction:column}.dashStat span{color:var(--muted);font-size:14px}.dashStat strong{font-size:32px;color:var(--pink);font-weight:900}
 .menuImg{width:100%;height:130px;object-fit:cover;border-radius:10px;margin-bottom:10px;background:#100b14;border:1px solid var(--line);color:var(--muted);text-align:center;line-height:130px;font-size:12px}
 .menuThumb{width:48px;height:48px;object-fit:cover;border-radius:8px;background:#100b14;border:1px solid var(--line);flex-shrink:0;color:var(--muted);font-size:10px;text-align:center;line-height:48px}
 
-/* กำหนด Scrollbar และตรึงหัวตารางไม่ให้ดันหน้า */
 .tableScrollBox { max-height: 250px; overflow-y: auto; position: relative; border-radius: 8px; }
 .tableScrollBox table { width: 100%; text-align: left; border-collapse: collapse; }
 .tableScrollBox th { position: sticky; top: 0; background: #17111c; z-index: 2; padding: 10px; border-bottom: 1px solid var(--line); color: var(--muted); }
 .tableScrollBox td { padding: 10px; border-bottom: 1px solid #281d2e; }
 
-@media(max-width:800px){.roleGrid,.cols{grid-template-columns:1fr}.top{padding:0 14px}.logo{font-size:22px}}
+.staff-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(250px, 1fr)); gap:15px; }
+
+@media(max-width:800px){.cols{grid-template-columns:1fr}.top{padding:0 14px}.logo{font-size:22px}}
 </style>
 </head>
 <body>
@@ -44,15 +47,20 @@ button,input,select,textarea{font:inherit}button{cursor:pointer;border:0;border-
 <main class="wrap">
 <section id="rolePage">
   <div class="roleGrid">
-    <div class="role"><div style="font-size:55px">👨‍🍳</div><h2>พนักงาน</h2><p>รับออเดอร์ ลงเวลาเข้า-ออกเวรเรียลไทม์ และอัปเดตสถานะ</p><button onclick="enterRole('staff')">เข้าหน้าพนักงาน</button></div>
-    <div class="role"><div style="font-size:55px">👑</div><h2>ผู้จัดการ</h2><p>จัดการโต๊ะ เมนู พนักงาน เช็กเวลาทำงานเรียลไทม์ และดูยอดขาย</p><button onclick="enterRole('manager')">เข้าหน้าผู้จัดการ</button></div>
+    <div class="role"><div style="font-size:55px">👨‍🍳</div><h2>พนักงาน</h2><p>ลงเวลาเข้า-ออกเวร และดูรายชื่อทีมงานเรียลไทม์</p><button onclick="enterRole('staff_time')">เข้าสู่ระบบพนักงาน</button></div>
+    <div class="role"><div style="font-size:55px">📝</div><h2>รับออเดอร์</h2><p>รับออเดอร์ลูกค้า จัดการโต๊ะ และสถานะอาหาร</p><button onclick="enterRole('staff_order')">เข้าสู่ระบบรับออเดอร์</button></div>
+    <div class="role"><div style="font-size:55px">👑</div><h2>ผู้จัดการ</h2><p>จัดการเมนู พนักงาน ยอดขาย และตั้งค่าระบบ</p><button onclick="enterRole('manager')">เข้าสู่ระบบผู้จัดการ</button></div>
   </div>
 </section>
 
-<!-- หน้าพนักงาน -->
-<section id="staffPage" class="hidden">
-  <div class="card" style="margin-bottom:20px; border:1px solid var(--pink)">
-    <h3 style="margin-top:0">⏰ บันทึกเวลาเข้า-ออกเวรพนักงาน (Realtime)</h3>
+<!-- หน้าพนักงาน (ลงเวลาและรายชื่อ) -->
+<section id="staffTimePage" class="hidden">
+  <div class="toolbar">
+    <button class="btn" onclick="refreshAll()">↻ อัปเดตข้อมูล</button>
+  </div>
+  
+  <div class="card" style="margin-bottom:25px; border:1px solid var(--pink)">
+    <h3 style="margin-top:0">⏰ บันทึกเวลาเข้า-ออกเวร</h3>
     <div class="row">
       <div class="field" style="flex:1; min-width:200px; margin:0">
         <select id="staffNameSelect" onchange="filterMyAttendance()"><option value="">-- เลือกชื่อพนักงาน --</option></select>
@@ -69,11 +77,20 @@ button,input,select,textarea{font:inherit}button{cursor:pointer;border:0;border-
     </div>
   </div>
 
-  <div class="toolbar">
-    <button class="btn" onclick="refreshAll()">↻ อัปเดตข้อมูล</button>
-    <button class="btn" onclick="openOrder()">＋ รับออเดอร์ใหม่</button>
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+    <h2 style="margin:0">👥 รายชื่อพนักงานทั้งหมด</h2>
+    <span class="muted" style="font-size:14px">อัปเดตสถานะเรียลไทม์</span>
   </div>
-  <h2>👨‍🍳 รับออเดอร์</h2>
+  <div id="publicStaffList" class="staff-grid"></div>
+</section>
+
+<!-- หน้ารับออเดอร์ -->
+<section id="staffOrderPage" class="hidden">
+  <div class="toolbar">
+    <button class="btn" onclick="refreshAll()">↻ อัปเดตโต๊ะอาหาร</button>
+    <button class="primary" onclick="openOrder()">＋ รับออเดอร์ใหม่</button>
+  </div>
+  <h2>📝 โต๊ะอาหาร & ออเดอร์ปัจจุบัน</h2>
   <div id="staffTables" class="grid"></div>
   <div id="staffOrder" class="orderPanel hidden"></div>
 </section>
@@ -85,7 +102,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer;border:0;border-
     <button class="primary" onclick="openTableModal()">＋ เพิ่มโต๊ะ</button>
     <button class="primary" onclick="openMenuModal()">＋ เพิ่มเมนู</button>
     <button class="primary" style="background:#8b5cf6; color:#fff" onclick="openStaffModal()">＋ จัดการรายชื่อพนักงาน</button>
-    <button class="btn" style="background:#374151;" onclick="openChangePasswordModal()">🔒 เปลี่ยนรหัสผ่านผู้จัดการ</button>
+    <button class="btn" style="background:#374151;" onclick="openChangePasswordModal()">🔒 เปลี่ยนรหัสผ่าน</button>
   </div>
   
   <div class="dashboard">
@@ -104,21 +121,14 @@ button,input,select,textarea{font:inherit}button{cursor:pointer;border:0;border-
     </div>
   </div>
 
+  <!-- ตารางต่างๆ ของหน้าผู้จัดการคงเดิม -->
   <div style="margin-bottom:25px">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
       <h3 style="margin:0">📦 รายละเอียดสินค้าที่ขายได้วันนี้</h3>
-      <button class="btn" onclick="renderTodaySoldItems()">↻ อัปเดตรายการ</button>
     </div>
     <div class="card tableScrollBox">
       <table>
-        <thead>
-          <tr>
-            <th>รูปภาพ</th>
-            <th>ชื่อเมนู</th>
-            <th>จำนวนที่ขายได้</th>
-            <th>ราคารวม</th>
-          </tr>
-        </thead>
+        <thead><tr><th>รูปภาพ</th><th>ชื่อเมนู</th><th>จำนวนที่ขายได้</th><th>ราคารวม</th></tr></thead>
         <tbody id="todaySoldItemsList"></tbody>
       </table>
     </div>
@@ -126,19 +136,11 @@ button,input,select,textarea{font:inherit}button{cursor:pointer;border:0;border-
 
   <div style="margin-bottom:25px">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
-      <h3 style="margin:0">📑 ประวัติการปิดยอดขายรายวัน (Daily Settlement Logs)</h3>
-      <button class="btn" onclick="renderDailySummary()">↻ รีเฟรชยอดขาย</button>
+      <h3 style="margin:0">📑 ประวัติการปิดยอดขายรายวัน</h3>
     </div>
     <div class="card tableScrollBox">
       <table>
-        <thead>
-          <tr>
-            <th>วันที่บันทึก</th>
-            <th>จำนวนออเดอร์</th>
-            <th>ยอดขายรวม</th>
-            <th>การจัดการ</th>
-          </tr>
-        </thead>
+        <thead><tr><th>วันที่บันทึก</th><th>จำนวนออเดอร์</th><th>ยอดขายรวม</th><th>การจัดการ</th></tr></thead>
         <tbody id="dailySalesList"></tbody>
       </table>
     </div>
@@ -146,19 +148,11 @@ button,input,select,textarea{font:inherit}button{cursor:pointer;border:0;border-
 
   <div style="margin-bottom:25px">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
-      <h3 style="margin:0">⏱️ สรุปชั่วโมงทำงานพนักงาน (คำนวณแยกวัน)</h3>
-      <button class="btn" onclick="refreshAll()">↻ รีเฟรช</button>
+      <h3 style="margin:0">⏱️ สรุปชั่วโมงทำงานพนักงาน</h3>
     </div>
     <div class="card tableScrollBox">
       <table>
-        <thead>
-          <tr>
-            <th>วันที่</th>
-            <th>ชื่อพนักงาน</th>
-            <th>รวมเวลาปฏิบัติงาน</th>
-            <th>จัดการ</th>
-          </tr>
-        </thead>
+        <thead><tr><th>วันที่</th><th>ชื่อพนักงาน</th><th>รวมเวลาปฏิบัติงาน</th><th>จัดการ</th></tr></thead>
         <tbody id="workHoursSummaryList"></tbody>
       </table>
     </div>
@@ -167,18 +161,10 @@ button,input,select,textarea{font:inherit}button{cursor:pointer;border:0;border-
   <div style="margin-bottom:25px">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
       <h3 style="margin:0">🕒 บันทึกเวลาเข้า-ออกเวรพนักงาน (Realtime Log)</h3>
-      <button class="btn" onclick="refreshAll()">↻ รีเฟรช</button>
     </div>
     <div class="card tableScrollBox">
       <table>
-        <thead>
-          <tr>
-            <th>ชื่อพนักงาน</th>
-            <th>สถานะ</th>
-            <th>เวลาบันทึก</th>
-            <th>การจัดการ</th>
-          </tr>
-        </thead>
+        <thead><tr><th>ชื่อพนักงาน</th><th>สถานะ</th><th>เวลาบันทึก</th><th>การจัดการ</th></tr></thead>
         <tbody id="attendanceList"></tbody>
       </table>
     </div>
@@ -187,24 +173,17 @@ button,input,select,textarea{font:inherit}button{cursor:pointer;border:0;border-
   <div style="margin-bottom:25px">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
       <h3 style="margin:0">🔥 เมนูขายดี (สถิติรวมทั้งหมด)</h3>
-      <button class="danger" style="font-size:12px; padding:6px 12px;" onclick="resetAllOrderStats()">🗑️ รีเซ็ตสถิติขายดีทั้งหมด</button>
+      <button class="danger" style="font-size:12px; padding:6px 12px;" onclick="resetAllOrderStats()">🗑️ รีเซ็ตสถิติขายดี</button>
     </div>
     <div class="card tableScrollBox">
       <table>
-        <thead>
-          <tr>
-            <th>อันดับ</th>
-            <th>เมนู</th>
-            <th>จำนวนที่ขายได้</th>
-            <th>ยอดขายรวม</th>
-          </tr>
-        </thead>
+        <thead><tr><th>อันดับ</th><th>เมนู</th><th>จำนวน</th><th>ยอดขายรวม</th></tr></thead>
         <tbody id="topItemsList"></tbody>
       </table>
     </div>
   </div>
 
-  <h2>👑 ผู้จัดการ</h2>
+  <h2>👑 ผู้จัดการ (จัดการโต๊ะและเมนู)</h2>
   <div class="cols">
     <div><h3>โต๊ะและออเดอร์ทั้งหมด</h3><div id="managerTables" class="grid"></div></div>
     <div><h3>เมนูอาหาร</h3><div id="managerMenus" class="card"></div></div>
@@ -247,15 +226,12 @@ async function sendDiscordWebhook(embedData) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ embeds: [embedData] })
     });
-  } catch(e) {
-    console.error("Discord Webhook Error:", e);
-  }
+  } catch(e) {}
 }
 
-// ฟังก์ชันแปลงข้อมูลเมนูเพื่อดึงรููปภาพโดยไม่ทำลายลิงก์ต้นฉบับ
 function parseMenu(m) {
   if (!m) return { img: '', desc: '', cat: '', icon: '' };
-  let rawImg = m.image || ''; // รองรับคอลัมน์ image ตรงๆ เผื่อฐานข้อมูลมี
+  let rawImg = m.image || '';
   let descText = m.description || '';
   let finalDesc = descText;
   let finalCat = '';
@@ -292,98 +268,73 @@ async function getManagerPassword() {
 async function enterRole(r){
   if (r === 'manager') {
     const currentPwd = await getManagerPassword();
-    const inputPwd = prompt('🔑 กรุณากรอกรหัสผ่านผู้จัดการร้าน:');
-    if (inputPwd === null) return;
-    if (inputPwd !== currentPwd) {
-      alert('❌ รหัสผ่านไม่ถูกต้อง! ไม่สามารถเข้าสู่ระบบผู้จัดการได้');
-      return;
-    }
+    showModal(`
+      <div style="text-align:center; padding-bottom:10px">
+        <div style="font-size:60px; margin-bottom:10px;">🔒</div>
+        <h2 style="margin:0 0 10px; color:var(--pink)">ผู้จัดการร้าน</h2>
+        <p class="muted">กรุณากรอกรหัสผ่านเพื่อเข้าใช้งานระบบ</p>
+        <div class="field" style="margin:20px 0;">
+          <input type="password" id="managerLoginPwd" placeholder="••••••••" style="text-align:center; font-size:24px; letter-spacing:8px; padding:15px; border-radius:15px;" onkeypress="if(event.key === 'Enter') verifyManagerLogin('${currentPwd}')">
+        </div>
+        <div class="actions" style="justify-content:center; gap:15px; margin-top:25px;">
+          <button class="btn" style="flex:1; padding:15px;" onclick="closeModal()">ยกเลิก</button>
+          <button class="primary" style="flex:1; padding:15px;" onclick="verifyManagerLogin('${currentPwd}')">เข้าสู่ระบบ</button>
+        </div>
+      </div>
+    `);
+    setTimeout(()=>document.getElementById('managerLoginPwd').focus(), 100);
+    return;
+  }
+  proceedToRole(r);
+}
+
+function verifyManagerLogin(correctPwd) {
+  const input = document.getElementById('managerLoginPwd').value;
+  if (input === correctPwd) {
+    closeModal();
+    proceedToRole('manager');
+  } else {
+    alert('❌ รหัสผ่านไม่ถูกต้อง!');
+    document.getElementById('managerLoginPwd').value = '';
+    document.getElementById('managerLoginPwd').focus();
+  }
+}
+
+function proceedToRole(r) {
+  role = r;
+  document.getElementById('rolePage').classList.add('hidden');
+  document.getElementById('staffTimePage').classList.add('hidden');
+  document.getElementById('staffOrderPage').classList.add('hidden');
+  document.getElementById('managerPage').classList.add('hidden');
+
+  if (r === 'staff_time') {
+    document.getElementById('staffTimePage').classList.remove('hidden');
+    document.getElementById('modeText').textContent = 'โหมด: ระบบลงเวลาพนักงาน';
+  }
+  if (r === 'staff_order') {
+    document.getElementById('staffOrderPage').classList.remove('hidden');
+    document.getElementById('modeText').textContent = 'โหมด: ระบบรับออเดอร์';
+  }
+  if (r === 'manager') {
+    document.getElementById('managerPage').classList.remove('hidden');
+    document.getElementById('modeText').textContent = 'โหมด: ผู้จัดการร้าน';
   }
 
-  role=r; 
-  document.getElementById('rolePage').classList.add('hidden'); 
-  document.getElementById(r==='staff'?'staffPage':'managerPage').classList.remove('hidden'); 
-  document.getElementById('homeBtn').classList.remove('hidden'); 
-  document.getElementById('modeText').textContent=r==='staff'?'โหมดพนักงาน':'โหมดผู้จัดการ'; 
+  document.getElementById('homeBtn').classList.remove('hidden');
   refreshAll();
 }
 
-function openChangePasswordModal() {
-  showModal(`
-    <h3>🔒 เปลี่ยนรหัสผ่านผู้จัดการ</h3>
-    <div class="field"><label>รหัสผ่านเดิม</label><input type="password" id="oldPwd" placeholder="กรอกรหัสผ่านเดิม"></div>
-    <div class="field"><label>รหัสผ่านใหม่</label><input type="password" id="newPwd" placeholder="กรอกรหัสผ่านใหม่"></div>
-    <div class="actions" style="margin-top:15px">
-      <button class="btn" onclick="closeModal()">ยกเลิก</button>
-      <button class="primary" onclick="saveNewPassword()">บันทึกรหัสผ่านใหม่</button>
-    </div>
-  `);
-}
-
-async function saveNewPassword() {
-  const oldPwdInput = document.getElementById('oldPwd').value;
-  const newPwdInput = document.getElementById('newPwd').value.trim();
-  const currentPwd = await getManagerPassword();
-
-  if (oldPwdInput !== currentPwd) {
-    return alert('❌ รหัสผ่านเดิมไม่ถูกต้อง');
-  }
-  if (!newPwdInput) {
-    return alert('⚠️ กรุณากรอกรหัสผ่านใหม่');
-  }
-
-  const row = {
-    table_id: null,
-    items: JSON.stringify({ password: newPwdInput }),
-    total: 0,
-    status: 'MANAGER_PWD'
-  };
-
-  await dbInsert('star_orders', row);
-  localStorage.setItem('77_manager_pwd', newPwdInput);
-  alert('🟢 เปลี่ยนรหัสผ่านสำเร็จ!');
-  closeModal();
-}
-
-async function resetTodaySales() {
-  const todayOrders = getTodayPaidOrders();
-  if (todayOrders.length === 0) {
-    return alert('ไม่มีรายการยอดขายของวันนี้ให้ลบ');
-  }
-
-  if (confirm(`⚠️ คุณแน่ใจหรือไม่ว่าต้องการ "ล้างยอดขายวันนี้" ทั้งหมด (${todayOrders.length} รายการ)?\nการดำเนินการนี้จะลบรายการสั่งซื้อวันนี้ที่ชำระเงินแล้วออกจากระบบ!`)) {
-    for (let o of todayOrders) {
-      await dbDelete('star_orders', o.id);
-    }
-    alert('🟢 ล้างยอดขายของวันนี้เรียบร้อยแล้ว');
-    refreshAll();
-  }
-}
-
-async function resetAllOrderStats() {
-  const paidOrders = orders.filter(o => o.status === 'ชำระเงินแล้ว' || o.status === 'จบงาน');
-  if (paidOrders.length === 0) {
-    return alert('ไม่มีสถิติออเดอร์ให้รีเซ็ต');
-  }
-
-  if (confirm(`⚠️ ยืนยันการ "รีเซ็ตสถิติขายดีทั้งหมด"?\nระบบจะทำการลบประวัติออเดอร์ที่จบงานแล้วทั้งหมด (${paidOrders.length} รายการ)`)) {
-    for (let o of paidOrders) {
-      await dbDelete('star_orders', o.id);
-    }
-    alert('🟢 รีเซ็ตสถิติขายดีทั้งหมดเรียบร้อยแล้ว');
-    refreshAll();
-  }
-}
-
 document.getElementById('homeBtn').onclick=()=>{
-  role=null;
+  role = null;
   document.getElementById('rolePage').classList.remove('hidden');
-  document.getElementById('staffPage').classList.add('hidden');
+  document.getElementById('staffTimePage').classList.add('hidden');
+  document.getElementById('staffOrderPage').classList.add('hidden');
   document.getElementById('managerPage').classList.add('hidden');
   document.getElementById('homeBtn').classList.add('hidden');
   document.getElementById('modeText').textContent='เลือกหมวดหมู่';
 };
 
+// Functions DB CRUD
 async function dbGet(table){if(!sb)return JSON.parse(localStorage.getItem('77_'+table)||'[]');let {data,error}=await sb.from(table).select('*').order('id');if(error){console.error(error);return []}return data||[]}
 async function dbInsert(table,row){if(!sb){let a=await dbGet(table);row.id=Date.now();a.push(row);localStorage.setItem('77_'+table,JSON.stringify(a));return row}let {data,error}=await sb.from(table).insert(row).select().single();if(error){alert(error.message);return null}return data}
 async function dbUpdate(table,id,row){if(!sb){let a=await dbGet(table);a=a.map(x=>x.id===id?{...x,...row}:x);localStorage.setItem('77_'+table,JSON.stringify(a));return true}let {error}=await sb.from(table).update(row).eq('id',id);if(error){alert(error.message);return false}return true}
@@ -396,7 +347,8 @@ async function refreshAll(){
   staffList = await dbGet('star_staff');
   
   await loadStaffList();
-  renderStaff();
+  renderStaffListPublic(); // แสดงรายชื่อในหน้าลงเวลา
+  renderTables();
   renderManager();
   calculateTodaySales();
   renderTodaySoldItems();
@@ -415,12 +367,45 @@ async function loadStaffList(){
   }
 }
 
+function renderStaffListPublic() {
+  const el = document.getElementById('publicStaffList');
+  if(!el) return;
+  
+  if(!staffList.length) {
+    el.innerHTML = '<div class="empty" style="grid-column: 1 / -1;">ยังไม่มีรายชื่อพนักงานในระบบ</div>';
+    return;
+  }
+
+  el.innerHTML = staffList.map(s => {
+    const isOnline = s.attendance === 'เข้าเวร';
+    const color = isOnline ? 'var(--ok)' : 'var(--muted)';
+    const bg = isOnline ? '#173d2b' : '#302438';
+    
+    return `
+      <div class="card" style="display:flex; align-items:center; gap:15px; border-left: 4px solid ${color}; padding:15px">
+        <div style="font-size:35px; background:#110c15; border-radius:50%; width:50px; height:50px; display:flex; align-items:center; justify-content:center; border:1px solid var(--line);">
+          👤
+        </div>
+        <div style="flex:1">
+          <h3 style="margin:0; font-size:16px;">${esc(s.name)}</h3>
+          <div style="font-size:13px; color:var(--muted); margin-top:2px;">${esc(s.role || 'พนักงาน')}</div>
+        </div>
+        <div style="text-align:right">
+           <span class="status" style="background:${bg}; color:${color}; font-weight:bold;">
+             ${isOnline ? '🟢 เข้าเวร' : '🔴 ออกเวร'}
+           </span>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+
 async function clockInOut(type){
   const name = document.getElementById('staffNameSelect').value;
   if(!name) return alert('กรุณาเลือกชื่อพนักงานก่อนครับ');
 
   const now = new Date();
-  
   const row = {
     table_id: null,
     items: JSON.stringify([{ staff_name: name, clock_type: type, timestamp: now.getTime() }]),
@@ -439,7 +424,6 @@ async function clockInOut(type){
 
   if(res) {
     alert(`บันทึกเวลา "${type}" สำหรับ ${name} เรียบร้อยแล้ว`);
-    
     sendDiscordWebhook({
       title: type === 'เข้าเวร' ? '🟢 พนักงานเข้าเวร' : '🔴 พนักงานออกเวร',
       color: type === 'เข้าเวร' ? 0x79e2a7 : 0xff7d91,
@@ -451,14 +435,11 @@ async function clockInOut(type){
       footer: { text: '★ 77 STAR Attendance Notification' },
       timestamp: new Date().toISOString()
     });
-
     refreshAll();
   }
 }
 
-function filterMyAttendance(){
-  renderAttendanceList();
-}
+function filterMyAttendance(){ renderAttendanceList(); }
 
 function renderAttendanceList(){
   const mgrListEl = document.getElementById('attendanceList');
@@ -474,14 +455,7 @@ function renderAttendanceList(){
       const timeStamp = data.timestamp || (o.created_at ? new Date(o.created_at).getTime() : Date.now());
       const timeDisplay = new Date(timeStamp).toLocaleString('th-TH', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' });
       const dateKey = new Date(timeStamp).toLocaleDateString('th-TH');
-      return {
-        id: o.id,
-        name: data.staff_name || 'ไม่ระบุชื่อ',
-        type: data.clock_type || 'เข้าเวร',
-        time: timeDisplay,
-        timestamp: timeStamp,
-        dateKey: dateKey
-      };
+      return { id: o.id, name: data.staff_name || 'ไม่ระบุชื่อ', type: data.clock_type || 'เข้าเวร', time: timeDisplay, timestamp: timeStamp, dateKey: dateKey };
     } catch(e){ return null; }
   }).filter(Boolean).sort((a,b) => b.timestamp - a.timestamp);
 
@@ -527,63 +501,38 @@ function renderAttendanceList(){
 function renderWorkHoursSummary(logs) {
   const summaryEl = document.getElementById('workHoursSummaryList');
   if(!summaryEl) return;
-
   const chronologicalLogs = [...logs].reverse();
   const grouped = {};
-
   chronologicalLogs.forEach(l => {
     if(!grouped[l.dateKey]) grouped[l.dateKey] = {};
     if(!grouped[l.dateKey][l.name]) grouped[l.dateKey][l.name] = [];
     grouped[l.dateKey][l.name].push(l);
   });
-
   const summaryRows = [];
-
   Object.keys(grouped).forEach(dateKey => {
     Object.keys(grouped[dateKey]).forEach(staffName => {
       const staffLogs = grouped[dateKey][staffName];
-      let totalMs = 0;
-      let lastInTime = null;
-
+      let totalMs = 0; let lastInTime = null;
       staffLogs.forEach(entry => {
-        if (entry.type === 'เข้าเวร') {
-          lastInTime = entry.timestamp;
-        } else if (entry.type === 'ออกเวร' && lastInTime) {
-          totalMs += (entry.timestamp - lastInTime);
-          lastInTime = null;
-        }
+        if (entry.type === 'เข้าเวร') lastInTime = entry.timestamp;
+        else if (entry.type === 'ออกเวร' && lastInTime) { totalMs += (entry.timestamp - lastInTime); lastInTime = null; }
       });
-
       let isWorking = false;
-      if (lastInTime) {
-        totalMs += (Date.now() - lastInTime);
-        isWorking = true;
-      }
-
+      if (lastInTime) { totalMs += (Date.now() - lastInTime); isWorking = true; }
       const totalSeconds = Math.floor(totalMs / 1000);
-      const hours = Math.floor(totalSeconds / 3600);
-      const mins = Math.floor((totalSeconds % 3600) / 60);
-      const secs = totalSeconds % 60;
-
-      const logIdsToDelete = staffLogs.map(l => l.id);
-
       summaryRows.push({
-        dateKey,
-        staffName,
-        hours,
-        mins,
-        secs, 
-        isWorking,
-        ids: logIdsToDelete
+        dateKey, staffName,
+        hours: Math.floor(totalSeconds / 3600),
+        mins: Math.floor((totalSeconds % 3600) / 60),
+        secs: totalSeconds % 60, 
+        isWorking, ids: staffLogs.map(l => l.id)
       });
     });
   });
-
   if(!summaryRows.length) {
     summaryEl.innerHTML = '<tr><td colspan="4" class="empty" style="border:none">ยังไม่มีสรุปเวลาทำงาน</td></tr>';
     return;
   }
-
   summaryEl.innerHTML = summaryRows.reverse().map(s => `
     <tr>
       <td style="font-weight:bold">${esc(s.dateKey)}</td>
@@ -601,21 +550,50 @@ function renderWorkHoursSummary(logs) {
   `).join('');
 }
 
-async function deleteClockLog(id){
-  if(confirm('คุณต้องการลบรายการบันทึกเวลานี้ใช่หรือไม่?')){
-    await dbDelete('star_orders', id);
+// อื่นๆ ของผู้จัดการ (Modal Password, จัดการร้าน, ฯลฯ)
+function openChangePasswordModal() {
+  showModal(`
+    <h3>🔒 เปลี่ยนรหัสผ่านผู้จัดการ</h3>
+    <div class="field"><label>รหัสผ่านเดิม</label><input type="password" id="oldPwd" placeholder="กรอกรหัสผ่านเดิม"></div>
+    <div class="field"><label>รหัสผ่านใหม่</label><input type="password" id="newPwd" placeholder="กรอกรหัสผ่านใหม่"></div>
+    <div class="actions" style="margin-top:15px">
+      <button class="btn" onclick="closeModal()">ยกเลิก</button>
+      <button class="primary" onclick="saveNewPassword()">บันทึกรหัสผ่านใหม่</button>
+    </div>
+  `);
+}
+async function saveNewPassword() {
+  const oldPwdInput = document.getElementById('oldPwd').value;
+  const newPwdInput = document.getElementById('newPwd').value.trim();
+  const currentPwd = await getManagerPassword();
+  if (oldPwdInput !== currentPwd) return alert('❌ รหัสผ่านเดิมไม่ถูกต้อง');
+  if (!newPwdInput) return alert('⚠️ กรุณากรอกรหัสผ่านใหม่');
+  const row = { table_id: null, items: JSON.stringify({ password: newPwdInput }), total: 0, status: 'MANAGER_PWD' };
+  await dbInsert('star_orders', row);
+  localStorage.setItem('77_manager_pwd', newPwdInput);
+  alert('🟢 เปลี่ยนรหัสผ่านสำเร็จ!');
+  closeModal();
+}
+async function resetTodaySales() {
+  const todayOrders = getTodayPaidOrders();
+  if (todayOrders.length === 0) return alert('ไม่มีรายการยอดขายของวันนี้ให้ลบ');
+  if (confirm(`⚠️ คุณแน่ใจหรือไม่ว่าต้องการ "ล้างยอดขายวันนี้" ทั้งหมด (${todayOrders.length} รายการ)?\nการดำเนินการนี้จะลบรายการสั่งซื้อวันนี้ที่ชำระเงินแล้วออกจากระบบ!`)) {
+    for (let o of todayOrders) await dbDelete('star_orders', o.id);
+    alert('🟢 ล้างยอดขายของวันนี้เรียบร้อยแล้ว');
     refreshAll();
   }
 }
-
-async function deleteDayWorkLog(dateKey, name, ids){
-  if(confirm(`ต้องการลบประวัติการเข้า-ออกเวรของ "${name}" ในวันที่ ${dateKey} ทั้งหมดใช่หรือไม่?`)){
-    for(let id of ids){
-      await dbDelete('star_orders', id);
-    }
+async function resetAllOrderStats() {
+  const paidOrders = orders.filter(o => o.status === 'ชำระเงินแล้ว' || o.status === 'จบงาน');
+  if (paidOrders.length === 0) return alert('ไม่มีสถิติออเดอร์ให้รีเซ็ต');
+  if (confirm(`⚠️ ยืนยันการ "รีเซ็ตสถิติขายดีทั้งหมด"?\nระบบจะทำการลบประวัติออเดอร์ที่จบงานแล้วทั้งหมด (${paidOrders.length} รายการ)`)) {
+    for (let o of paidOrders) await dbDelete('star_orders', o.id);
+    alert('🟢 รีเซ็ตสถิติขายดีทั้งหมดเรียบร้อยแล้ว');
     refreshAll();
   }
 }
+async function deleteClockLog(id){if(confirm('คุณต้องการลบรายการบันทึกเวลานี้ใช่หรือไม่?')){await dbDelete('star_orders', id);refreshAll();}}
+async function deleteDayWorkLog(dateKey, name, ids){if(confirm(`ต้องการลบประวัติการเข้า-ออกเวรของ "${name}" ในวันที่ ${dateKey} ทั้งหมดใช่หรือไม่?`)){for(let id of ids)await dbDelete('star_orders', id);refreshAll();}}
 
 function openStaffModal(){
   showModal(`
@@ -639,38 +617,23 @@ function openStaffModal(){
     <div style="max-height:180px; overflow-y:auto">
       ${staffList.map(s => `
         <div class="menuItem">
-          <div>
-            <b>${esc(s.name)}</b> 
-            <span class="status" style="margin-left:8px; background:#4b3650; color:#fff;">${esc(s.role || 'พนักงานเสิร์ฟ')}</span>
-          </div>
+          <div><b>${esc(s.name)}</b> <span class="status" style="margin-left:8px; background:#4b3650; color:#fff;">${esc(s.role || 'พนักงานเสิร์ฟ')}</span></div>
           <button class="danger" onclick="removeStaff(${s.id})">ลบ</button>
         </div>
       `).join('')}
     </div>
-    <div class="actions" style="margin-top:15px"><button class="btn" onclick="closeModal()">ปิด</button></div>
+    <div class="actions" style="margin-top:15px"><button class="btn" style="width:100%" onclick="closeModal()">ปิด</button></div>
   `);
 }
-
 async function addStaff(){
   const name = document.getElementById('newStaffName').value.trim();
   const role = document.getElementById('newStaffRole').value;
   if(!name) return;
-  await dbInsert('star_staff', {
-    name: name,
-    role: role,
-    status: 'กำลังทำงาน',
-    attendance: 'ยังไม่เข้าเวร',
-    attendance_time: '-'
-  });
+  await dbInsert('star_staff', { name: name, role: role, status: 'กำลังทำงาน', attendance: 'ยังไม่เข้าเวร', attendance_time: '-' });
   await refreshAll();
   openStaffModal();
 }
-
-async function removeStaff(id){
-  await dbDelete('star_staff', id);
-  await refreshAll();
-  openStaffModal();
-}
+async function removeStaff(id){ await dbDelete('star_staff', id); await refreshAll(); openStaffModal(); }
 
 function getTodayPaidOrders(){
   const todayStr = new Date().toDateString();
@@ -680,21 +643,17 @@ function getTodayPaidOrders(){
     return isPaid && (orderDate === todayStr);
   });
 }
-
 function calculateTodaySales(){
   const todayOrders = getTodayPaidOrders();
   const totalSales = todayOrders.reduce((sum, o) => sum + Number(o.total || 0), 0);
   const salesEl = document.getElementById('todaySales');
   const countEl = document.getElementById('todayOrderCount');
-  
   if(salesEl) salesEl.textContent = money(totalSales);
   if(countEl) countEl.textContent = todayOrders.length + ' ออเดอร์';
 }
-
 function getTodaySoldItemsData(){
   const todayOrders = getTodayPaidOrders();
   const itemStats = {};
-
   todayOrders.forEach(o => {
     try {
       const items = JSON.parse(o.items || '[]');
@@ -702,50 +661,24 @@ function getTodaySoldItemsData(){
         if(!itemStats[it.name]) itemStats[it.name] = { qty: 0, total: 0, image_url: '' };
         itemStats[it.name].qty += Number(it.qty || 0);
         itemStats[it.name].total += Number(it.price || 0) * Number(it.qty || 0);
-        
         const foundMenu = menus.find(m => m.name === it.name);
-        if(foundMenu) {
-          const parsed = parseMenu(foundMenu);
-          itemStats[it.name].image_url = parsed.img;
-        }
+        if(foundMenu) itemStats[it.name].image_url = parseMenu(foundMenu).img;
       });
     } catch(e){}
   });
-
-  return Object.keys(itemStats).map(name => ({
-    name,
-    qty: itemStats[name].qty,
-    total: itemStats[name].total,
-    image_url: itemStats[name].image_url
-  })).sort((a,b) => b.qty - a.qty);
+  return Object.keys(itemStats).map(name => ({ name, qty: itemStats[name].qty, total: itemStats[name].total, image_url: itemStats[name].image_url })).sort((a,b) => b.qty - a.qty);
 }
-
 function renderTodaySoldItems(){
   const el = document.getElementById('todaySoldItemsList');
   if(!el) return;
-
   const soldItems = getTodaySoldItemsData();
-
-  if(!soldItems.length){
-    el.innerHTML = '<tr><td colspan="4" class="empty" style="border:none">ยังไม่มีรายการสินค้าขายได้ในวันนี้</td></tr>';
-    return;
-  }
-
-  el.innerHTML = soldItems.map(item => `
-    <tr>
-      <td>${item.image_url ? `<img src="${esc(item.image_url)}" class="menuThumb" alt="Image">` : '-'}</td>
-      <td><b>${esc(item.name)}</b></td>
-      <td><b>${item.qty}</b> จาน/ชิ้น</td>
-      <td style="color:var(--pink); font-weight:bold">${money(item.total)}</td>
-    </tr>
-  `).join('');
+  if(!soldItems.length){ el.innerHTML = '<tr><td colspan="4" class="empty" style="border:none">ยังไม่มีรายการสินค้าขายได้ในวันนี้</td></tr>'; return; }
+  el.innerHTML = soldItems.map(item => `<tr><td>${item.image_url ? `<img src="${esc(item.image_url)}" class="menuThumb">` : '-'}</td><td><b>${esc(item.name)}</b></td><td><b>${item.qty}</b> จาน/ชิ้น</td><td style="color:var(--pink); font-weight:bold">${money(item.total)}</td></tr>`).join('');
 }
-
 function viewTodaySoldItems(){
   const soldItems = getTodaySoldItemsData();
   const todayOrders = getTodayPaidOrders();
   const totalSales = todayOrders.reduce((sum, o) => sum + Number(o.total || 0), 0);
-
   let html = `
     <h3>🔍 สรุปรายการสินค้าที่ขายได้วันนี้</h3>
     <p class="muted">วันที่: ${new Date().toLocaleDateString('th-TH', {year:'numeric', month:'long', day:'numeric'})}</p>
@@ -754,166 +687,59 @@ function viewTodaySoldItems(){
       <div>จำนวนออเดอร์: <b>${todayOrders.length} ออเดอร์</b></div>
     </div>
   `;
-
-  if(!soldItems.length){
-    html += '<div class="empty">ยังไม่มีออเดอร์ที่ชำระเงินวันนี้</div>';
-  } else {
-    html += `
-      <div style="max-height:300px; overflow-y:auto">
-        ${soldItems.map(it => `
-          <div class="menuItem">
-            <div style="display:flex; align-items:center; gap:10px">
-              ${it.image_url ? `<img src="${esc(it.image_url)}" class="menuThumb" alt="Img">` : ''}
-              <div>
-                <b>${esc(it.name)}</b>
-                <div class="muted">ขายได้ ${it.qty} รายการ</div>
-              </div>
-            </div>
-            <div style="color:var(--pink); font-weight:bold">${money(it.total)}</div>
-          </div>
-        `).join('')}
-      </div>
-    `;
-  }
-
+  if(!soldItems.length){ html += '<div class="empty">ยังไม่มีออเดอร์ที่ชำระเงินวันนี้</div>'; }
+  else { html += `<div style="max-height:300px; overflow-y:auto">${soldItems.map(it => `<div class="menuItem"><div style="display:flex; align-items:center; gap:10px">${it.image_url ? `<img src="${esc(it.image_url)}" class="menuThumb">` : ''}<div><b>${esc(it.name)}</b><div class="muted">ขายได้ ${it.qty} รายการ</div></div></div><div style="color:var(--pink); font-weight:bold">${money(it.total)}</div></div>`).join('')}</div>`; }
   html += `<div class="actions" style="margin-top:20px"><button class="btn" style="width:100%" onclick="closeModal()">ปิดหน้าต่าง</button></div>`;
   showModal(html);
 }
-
 async function saveDailySettlement(){
   const todayOrders = getTodayPaidOrders();
   const totalSales = todayOrders.reduce((sum, o) => sum + Number(o.total || 0), 0);
   const soldItems = getTodaySoldItemsData();
   const dateStr = new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' });
-
-  if(todayOrders.length === 0){
-    return alert('วันนี้ยังไม่มีออเดอร์ที่ชำระเงิน ไม่สามารถปิดยอดได้');
-  }
-
+  if(todayOrders.length === 0) return alert('วันนี้ยังไม่มีออเดอร์ที่ชำระเงิน ไม่สามารถปิดยอดได้');
   if(!confirm(`ยืนยันการบันทึกปิดยอดขายประจำวันที่ ${dateStr}?\n- จำนวน ${todayOrders.length} ออเดอร์\n- ยอดขายรวม ${money(totalSales)}`)) return;
-
-  const settlementData = {
-    date_str: dateStr,
-    timestamp: Date.now(),
-    order_count: todayOrders.length,
-    total_sales: totalSales,
-    items_summary: soldItems
-  };
-
-  const row = {
-    table_id: null,
-    items: JSON.stringify(settlementData),
-    total: totalSales,
-    status: 'DAILY_SETTLEMENT'
-  };
-
+  const settlementData = { date_str: dateStr, timestamp: Date.now(), order_count: todayOrders.length, total_sales: totalSales, items_summary: soldItems };
+  const row = { table_id: null, items: JSON.stringify(settlementData), total: totalSales, status: 'DAILY_SETTLEMENT' };
   const res = await dbInsert('star_orders', row);
   if(res){
     alert('บันทึกปิดยอดขายประจำวันสำเร็จเรียบร้อยแล้ว!');
-
-    sendDiscordWebhook({
-      title: '📊 บันทึกปิดยอดขายประจำวัน (Daily Settlement)',
-      color: 0xd77cf5,
-      fields: [
-        { name: 'ประจำวันที่', value: dateStr, inline: true },
-        { name: 'จำนวนออเดอร์', value: `${todayOrders.length} ออเดอร์`, inline: true },
-        { name: 'ยอดขายรวมทั้งหมด', value: money(totalSales), inline: false }
-      ],
-      footer: { text: '★ 77 STAR Settlement System' },
-      timestamp: new Date().toISOString()
-    });
-
+    sendDiscordWebhook({ title: '📊 บันทึกปิดยอดขายประจำวัน', color: 0xd77cf5, fields: [{ name: 'ประจำวันที่', value: dateStr, inline: true }, { name: 'จำนวนออเดอร์', value: `${todayOrders.length} ออเดอร์`, inline: true }, { name: 'ยอดขายรวม', value: money(totalSales), inline: false }] });
     refreshAll();
   }
 }
-
 function renderDailySummary(){
   const listEl = document.getElementById('dailySalesList');
   if(!listEl) return;
-
   const settlementOrders = orders.filter(o => o.status === 'DAILY_SETTLEMENT');
-
-  if (!settlementOrders.length) {
-    listEl.innerHTML = '<tr><td colspan="4" class="empty" style="border:none">ยังไม่มีประวัติการบันทึกปิดยอดขายประจำวัน</td></tr>';
-    return;
-  }
-
+  if (!settlementOrders.length) { listEl.innerHTML = '<tr><td colspan="4" class="empty" style="border:none">ยังไม่มีประวัติการบันทึกปิดยอดขาย</td></tr>'; return; }
   const rows = settlementOrders.map(o => {
     try {
       const data = JSON.parse(o.items || '{}');
-      return {
-        id: o.id,
-        date: data.date_str || (o.created_at ? new Date(o.created_at).toLocaleDateString('th-TH') : 'ไม่ระบุ'),
-        count: data.order_count || 0,
-        total: data.total_sales || o.total || 0,
-        items_summary: data.items_summary || []
-      };
+      return { id: o.id, date: data.date_str || 'ไม่ระบุ', count: data.order_count || 0, total: data.total_sales || o.total || 0, items_summary: data.items_summary || [] };
     } catch(e) { return null; }
   }).filter(Boolean).reverse();
-
-  listEl.innerHTML = rows.map(r => `
-    <tr>
-      <td style="font-weight:bold">${esc(r.date)}</td>
-      <td>${r.count} ออเดอร์</td>
-      <td style="color:var(--pink); font-weight:bold">${money(r.total)}</td>
-      <td>
-        <button class="btn" style="padding:4px 8px; font-size:12px;" onclick="viewSettlementDetail(${r.id})">🔍 ดูเมนูที่ขายได้</button>
-        <button class="danger" style="padding:4px 8px; font-size:12px; margin-left:4px;" onclick="deleteSettlement(${r.id})">ลบ</button>
-      </td>
-    </tr>
-  `).join('');
+  listEl.innerHTML = rows.map(r => `<tr><td style="font-weight:bold">${esc(r.date)}</td><td>${r.count} ออเดอร์</td><td style="color:var(--pink); font-weight:bold">${money(r.total)}</td><td><button class="btn" style="padding:4px 8px; font-size:12px;" onclick="viewSettlementDetail(${r.id})">🔍 ดูเมนูที่ขายได้</button> <button class="danger" style="padding:4px 8px; font-size:12px;" onclick="deleteSettlement(${r.id})">ลบ</button></td></tr>`).join('');
 }
-
 function viewSettlementDetail(id){
   const order = orders.find(o => o.id === id);
   if(!order) return;
-
   try {
     const data = JSON.parse(order.items || '{}');
     const items = data.items_summary || [];
-
-    let html = `
-      <h3>📑 สรุปการปิดยอดวันที่ ${esc(data.date_str)}</h3>
-      <div style="background:#110a15; padding:12px; border-radius:10px; margin-bottom:15px; border:1px solid var(--line)">
-        <div>ยอดขายรวม: <b style="color:var(--pink); font-size:18px;">${money(data.total_sales)}</b></div>
-        <div>จำนวนออเดอร์: <b>${data.order_count} ออเดอร์</b></div>
-      </div>
-      <h4>รายการสินค้าที่ขายได้วันนั้น:</h4>
-      <div style="max-height:250px; overflow-y:auto">
-    `;
-
-    if(!items.length){
-      html += '<div class="empty">ไม่มีข้อมูลสรุปเมนู</div>';
-    } else {
-      html += items.map(it => `
-        <div class="menuItem">
-          <div><b>${esc(it.name)}</b> <span class="muted">x ${it.qty}</span></div>
-          <div style="color:var(--pink); font-weight:bold">${money(it.total)}</div>
-        </div>
-      `).join('');
-    }
-
+    let html = `<h3>📑 สรุปการปิดยอดวันที่ ${esc(data.date_str)}</h3><div style="background:#110a15; padding:12px; border-radius:10px; margin-bottom:15px; border:1px solid var(--line)"><div>ยอดขายรวม: <b style="color:var(--pink); font-size:18px;">${money(data.total_sales)}</b></div><div>จำนวนออเดอร์: <b>${data.order_count} ออเดอร์</b></div></div><h4>รายการสินค้าที่ขายได้วันนั้น:</h4><div style="max-height:250px; overflow-y:auto">`;
+    if(!items.length) html += '<div class="empty">ไม่มีข้อมูลสรุปเมนู</div>';
+    else html += items.map(it => `<div class="menuItem"><div><b>${esc(it.name)}</b> <span class="muted">x ${it.qty}</span></div><div style="color:var(--pink); font-weight:bold">${money(it.total)}</div></div>`).join('');
     html += `</div><div class="actions" style="margin-top:20px"><button class="btn" style="width:100%" onclick="closeModal()">ปิด</button></div>`;
     showModal(html);
-  } catch(e) {
-    alert('ไม่สามารถอ่านข้อมูลได้');
-  }
+  } catch(e) { alert('ไม่สามารถอ่านข้อมูลได้'); }
 }
-
-async function deleteSettlement(id){
-  if(confirm('คุณต้องการลบประวัติการปิดยอดรายการนี้ใช่หรือไม่?')){
-    await dbDelete('star_orders', id);
-    refreshAll();
-  }
-}
-
+async function deleteSettlement(id){ if(confirm('คุณต้องการลบประวัติการปิดยอดรายการนี้ใช่หรือไม่?')){ await dbDelete('star_orders', id); refreshAll(); } }
 function renderTopItems(){
   const topEl = document.getElementById('topItemsList');
   if(!topEl) return;
-
   const paidOrders = orders.filter(o => o.status === 'ชำระเงินแล้ว' || o.status === 'จบงาน');
   const itemStats = {};
-
   paidOrders.forEach(o => {
     try {
       const items = JSON.parse(o.items || '[]');
@@ -921,69 +747,43 @@ function renderTopItems(){
         if(!itemStats[it.name]) itemStats[it.name] = { qty: 0, total: 0, image_url: '' };
         itemStats[it.name].qty += Number(it.qty || 0);
         itemStats[it.name].total += Number(it.price || 0) * Number(it.qty || 0);
-        
         const foundMenu = menus.find(m => m.name === it.name);
-        if(foundMenu) {
-          const parsed = parseMenu(foundMenu);
-          itemStats[it.name].image_url = parsed.img;
-        }
+        if(foundMenu) itemStats[it.name].image_url = parseMenu(foundMenu).img;
       });
     } catch(e){}
   });
-
-  const sorted = Object.keys(itemStats).map(name => ({
-    name,
-    qty: itemStats[name].qty,
-    total: itemStats[name].total,
-    image_url: itemStats[name].image_url
-  })).sort((a,b) => b.qty - a.qty);
-
-  if(!sorted.length) {
-    topEl.innerHTML = '<tr><td colspan="4" class="empty" style="border:none">ยังไม่มีสถิติการสั่งซื้อ</td></tr>';
-    return;
-  }
-
-  topEl.innerHTML = sorted.slice(0, 10).map((item, idx) => `
-    <tr>
-      <td style="font-weight:bold; color:var(--pink)">#${idx + 1}</td>
-      <td style="display:flex; align-items:center; gap:10px">
-        ${item.image_url ? `<img src="${esc(item.image_url)}" class="menuThumb" alt="img">` : ''}
-        <b>${esc(item.name)}</b>
-      </td>
-      <td><b>${item.qty}</b> จาน/ชิ้น</td>
-      <td style="color:var(--pink); font-weight:bold">${money(item.total)}</td>
-    </tr>
-  `).join('');
+  const sorted = Object.keys(itemStats).map(name => ({ name, qty: itemStats[name].qty, total: itemStats[name].total, image_url: itemStats[name].image_url })).sort((a,b) => b.qty - a.qty);
+  if(!sorted.length) { topEl.innerHTML = '<tr><td colspan="4" class="empty" style="border:none">ยังไม่มีสถิติการสั่งซื้อ</td></tr>'; return; }
+  topEl.innerHTML = sorted.slice(0, 10).map((item, idx) => `<tr><td style="font-weight:bold; color:var(--pink)">#${idx + 1}</td><td style="display:flex; align-items:center; gap:10px">${item.image_url ? `<img src="${esc(item.image_url)}" class="menuThumb">` : ''} <b>${esc(item.name)}</b></td><td><b>${item.qty}</b> จาน/ชิ้น</td><td style="color:var(--pink); font-weight:bold">${money(item.total)}</td></tr>`).join('');
 }
 
 function statusClass(s){return `<span class="status">${s}</span>`}
 function tableName(id){return (tables.find(t=>t.id===id)||{}).name||'โต๊ะ '+id}
 
-function renderStaff(){
+// จัดการโต๊ะและออเดอร์
+function renderTables(){
  const el=document.getElementById('staffTables'); if(!el)return;
  if(!tables.length){el.innerHTML='<div class="empty">ยังไม่มีโต๊ะ ให้ผู้จัดการเพิ่มโต๊ะก่อน</div>';return}
  el.innerHTML=tables.map(t=>{
-    const o=orders.find(x=>x.table_id===t.id && x.status!=='จบงาน' && x.status!=='CLOCK_LOG' && x.status!=='STAFF_LIST' && x.status!=='DAILY_SETTLEMENT' && x.status!=='MANAGER_PWD');
-    return `<div class="card tableCard"><h3>${esc(t.name)}</h3>${o?statusClass(o.status):'<span class="status">ว่าง</span>'}<div class="muted" style="margin-top:8px">${o?'ยอด '+money(o.total):'ยังไม่มีออเดอร์'}</div><div class="actions"><button class="primary" onclick="startTable(${t.id})">${o?'แก้ไขออเดอร์':'รับออเดอร์'}</button>${o?`<button class="btn" onclick="changeStatus(${o.id})">เปลี่ยนสถานะ</button>`:''}</div></div>`
+    const o=orders.find(x=>x.table_id===t.id && !['จบงาน','CLOCK_LOG','STAFF_LIST','DAILY_SETTLEMENT','MANAGER_PWD'].includes(x.status));
+    return `<div class="card tableCard"><h3>${esc(t.name)}</h3>${o?statusClass(o.status):'<span class="status">ว่าง</span>'}<div class="muted" style="margin-top:8px">${o?'ยอด '+money(o.total):'ยังไม่มีออเดอร์'}</div><div class="actions"><button class="primary" onclick="startTable(${t.id})">${o?'แก้ไขออเดอร์':'รับออเดอร์'}</button>${o?`<button class="btn" onclick="changeStatus(${o.id})">สถานะ</button>`:''}</div></div>`
  }).join('');
 }
-
 function renderManager(){
  const te=document.getElementById('managerTables'), me=document.getElementById('managerMenus'); if(!te)return;
- te.innerHTML=tables.length?tables.map(t=>{let o=orders.find(x=>x.table_id===t.id&&x.status!=='จบงาน'&&x.status!=='CLOCK_LOG'&&x.status!=='STAFF_LIST'&&x.status!=='DAILY_SETTLEMENT'&&x.status!=='MANAGER_PWD');return `<div class="card"><h3>${esc(t.name)}</h3>${o?`<div>${statusClass(o.status)}<br><b>${money(o.total)}</b></div><div class="actions"><button class="btn" onclick="changeStatus(${o.id})">สถานะ</button><button class="danger" onclick="deleteOrder(${o.id})">ลบออเดอร์</button></div>`:'<div class="muted">ว่าง</div>'}<div class="actions"><button class="btn" onclick="renameTable(${t.id})">แก้ชื่อ</button><button class="danger" onclick="deleteTable(${t.id})">ลบโต๊ะ</button></div></div>`}).join(''):'<div class="empty">ยังไม่มีโต๊ะ</div>';
+ te.innerHTML=tables.length?tables.map(t=>{let o=orders.find(x=>x.table_id===t.id&&!['จบงาน','CLOCK_LOG','STAFF_LIST','DAILY_SETTLEMENT','MANAGER_PWD'].includes(x.status));return `<div class="card"><h3>${esc(t.name)}</h3>${o?`<div>${statusClass(o.status)}<br><b>${money(o.total)}</b></div><div class="actions"><button class="btn" onclick="changeStatus(${o.id})">สถานะ</button><button class="danger" onclick="deleteOrder(${o.id})">ลบออเดอร์</button></div>`:'<div class="muted">ว่าง</div>'}<div class="actions"><button class="btn" onclick="renameTable(${t.id})">แก้ชื่อ</button><button class="danger" onclick="deleteTable(${t.id})">ลบโต๊ะ</button></div></div>`}).join(''):'<div class="empty">ยังไม่มีโต๊ะ</div>';
  me.innerHTML=menus.length?menus.map(m=>{
     const parsed = parseMenu(m);
-    return `<div class="menuItem"><div style="display:flex; gap:12px; align-items:center">${parsed.img?`<img src="${esc(parsed.img)}" class="menuThumb" alt="img">`:''}<div><b>${esc(m.name)}</b><div class="muted">${esc(parsed.desc||'')}</div></div></div><div class="row"><span class="price">${money(m.price)}</span><button class="btn" onclick="editMenu(${m.id})">แก้</button><button class="danger" onclick="deleteMenu(${m.id})">ลบ</button></div></div>`
+    return `<div class="menuItem"><div style="display:flex; gap:12px; align-items:center">${parsed.img?`<img src="${esc(parsed.img)}" class="menuThumb">`:''}<div><b>${esc(m.name)}</b><div class="muted">${esc(parsed.desc||'')}</div></div></div><div class="row"><span class="price">${money(m.price)}</span><button class="btn" onclick="editMenu(${m.id})">แก้</button><button class="danger" onclick="deleteMenu(${m.id})">ลบ</button></div></div>`
  }).join(''):'<div class="empty">ยังไม่มีเมนู</div>';
 }
-
-function startTable(id){currentOrder={table_id:id,items:[]};let old=orders.find(x=>x.table_id===id&&x.status!=='จบงาน'&&x.status!=='CLOCK_LOG'&&x.status!=='STAFF_LIST'&&x.status!=='DAILY_SETTLEMENT'&&x.status!=='MANAGER_PWD');if(old)try{currentOrder.items=JSON.parse(old.items||'[]')}catch{};renderOrder();document.getElementById('staffOrder').scrollIntoView({behavior:'smooth'})}
+function startTable(id){currentOrder={table_id:id,items:[]};let old=orders.find(x=>x.table_id===id&&!['จบงาน','CLOCK_LOG','STAFF_LIST','DAILY_SETTLEMENT','MANAGER_PWD'].includes(x.status));if(old)try{currentOrder.items=JSON.parse(old.items||'[]')}catch{};renderOrder();document.getElementById('staffOrder').scrollIntoView({behavior:'smooth'})}
 function openOrder(){if(!tables.length){alert('ยังไม่มีโต๊ะ');return}startTable(tables[0].id)}
 function renderOrder(){
  const p=document.getElementById('staffOrder');p.classList.remove('hidden');
  p.innerHTML=`<h3>ออเดอร์ — ${tableName(currentOrder.table_id)}</h3><div class="grid">${menus.map(m=>{
     const parsed = parseMenu(m);
-    return `<div class="card">${parsed.img?`<img src="${esc(parsed.img)}" class="menuImg" alt="Broken Link">`:''}<b>${esc(m.name)}</b><div class="price">${money(m.price)}</div><button class="primary" onclick="addItem(${m.id})">＋ เพิ่ม</button></div>`
+    return `<div class="card">${parsed.img?`<img src="${esc(parsed.img)}" class="menuImg">`:''}<b>${esc(m.name)}</b><div class="price">${money(m.price)}</div><button class="primary" onclick="addItem(${m.id})">＋ เพิ่ม</button></div>`
  }).join('')}</div><div style="margin-top:20px"><h3>รายการ</h3>${currentOrder.items.length?currentOrder.items.map((it,i)=>`<div class="menuItem"><div>${esc(it.name)} × ${it.qty}</div><div class="row"><b>${money(it.price*it.qty)}</b><button class="btn" onclick="qty(${i},-1)">−</button><button class="btn" onclick="qty(${i},1)">＋</button></div></div>`).join(''):'<div class="empty">ยังไม่มีรายการ</div>'}</div><div class="row" style="justify-content:space-between;margin-top:18px"><div class="total">${money(total())}</div><div class="row"><button class="btn" onclick="document.getElementById('staffOrder').classList.add('hidden')">ปิด</button><button class="primary" onclick="saveOrder()">บันทึกออเดอร์</button></div></div>`;
 }
 function addItem(id){let m=menus.find(x=>x.id===id),it=currentOrder.items.find(x=>x.menu_id===id);if(it)it.qty++;else currentOrder.items.push({menu_id:id,name:m.name,price:Number(m.price),qty:1});renderOrder()}
@@ -991,34 +791,16 @@ function qty(i,d){currentOrder.items[i].qty+=d;if(currentOrder.items[i].qty<=0)c
 function total(){return currentOrder.items.reduce((s,x)=>s+x.price*x.qty,0)}
 async function saveOrder(){
   if(!currentOrder.items.length){alert('กรุณาเลือกเมนูก่อน');return}
-  let old=orders.find(x=>x.table_id===currentOrder.table_id&&x.status!=='จบงาน'&&x.status!=='CLOCK_LOG'&&x.status!=='STAFF_LIST'&&x.status!=='DAILY_SETTLEMENT'&&x.status!=='MANAGER_PWD');
+  let old=orders.find(x=>x.table_id===currentOrder.table_id&&!['จบงาน','CLOCK_LOG','STAFF_LIST','DAILY_SETTLEMENT','MANAGER_PWD'].includes(x.status));
   let row={table_id:currentOrder.table_id,items:JSON.stringify(currentOrder.items),total:total(),status:old?old.status:'รออาหาร'};
-  
   if(old) await dbUpdate('star_orders',old.id,row);
   else await dbInsert('star_orders',row);
-  
   alert('บันทึกออเดอร์แล้ว');
-
-  const tName = tableName(currentOrder.table_id);
-  const itemListText = currentOrder.items.map(it => `• ${it.name} x${it.qty} (${money(it.price * it.qty)})`).join('\n');
-  
-  sendDiscordWebhook({
-    title: `🧾 มีการสั่งซื้อใหม่ / อัปเดตออเดอร์ (${tName})`,
-    color: 0x3498db,
-    fields: [
-      { name: 'โต๊ะ', value: tName, inline: true },
-      { name: 'ราคารวม', value: money(total()), inline: true },
-      { name: 'รายการที่สั่ง', value: itemListText || 'ไม่มีรายการ', inline: false }
-    ],
-    footer: { text: '★ 77 STAR Order System' },
-    timestamp: new Date().toISOString()
-  });
-
-  await refreshAll();
+  refreshAll();
   document.getElementById('staffOrder').classList.add('hidden');
 }
 
-async function changeStatus(id){let o=orders.find(x=>x.id===id);let html=`<h3>เปลี่ยนสถานะ — ${tableName(o.table_id)}</h3><div class="field"><select id="newStatus">${statuses.map(s=>`<option ${s===o.status?'selected':''}>${s}</option>`).join('')}</select></div><div class="actions"><button class="btn" onclick="closeModal()">ยกเลิก</button><button class="primary" onclick="saveStatus(${id})">บันทึก</button></div>`;showModal(html)}
+async function changeStatus(id){let o=orders.find(x=>x.id===id);let html=`<h3 style="margin-top:0">เปลี่ยนสถานะ — ${tableName(o.table_id)}</h3><div class="field"><select id="newStatus" style="font-size:16px; padding:12px">${statuses.map(s=>`<option ${s===o.status?'selected':''}>${s}</option>`).join('')}</select></div><div class="actions" style="margin-top:20px; gap:10px;"><button class="btn" style="flex:1" onclick="closeModal()">ยกเลิก</button><button class="primary" style="flex:1" onclick="saveStatus(${id})">บันทึก</button></div>`;showModal(html)}
 async function saveStatus(id){await dbUpdate('star_orders',id,{status:document.getElementById('newStatus').value});closeModal();refreshAll()}
 async function deleteOrder(id){if(confirm('ลบออเดอร์นี้ใช่หรือไม่?')){await dbDelete('star_orders',id);refreshAll()}}
 async function openTableModal(){showModal(`<h3>เพิ่มโต๊ะ</h3><div class="field"><label>ชื่อโต๊ะ</label><input id="tableName" placeholder="เช่น โต๊ะ 1"></div><div class="actions"><button class="btn" onclick="closeModal()">ยกเลิก</button><button class="primary" onclick="addTable()">เพิ่ม</button></div>`)}
@@ -1026,47 +808,32 @@ async function addTable(){let n=document.getElementById('tableName').value.trim(
 async function renameTable(id){let t=tables.find(x=>x.id===id);showModal(`<h3>แก้ชื่อโต๊ะ</h3><div class="field"><input id="tableName" value="${esc(t.name)}"></div><div class="actions"><button class="btn" onclick="closeModal()">ยกเลิก</button><button class="primary" onclick="saveTable(${id})">บันทึก</button></div>`)}
 async function saveTable(id){await dbUpdate('star_tables',id,{name:document.getElementById('tableName').value.trim()});closeModal();refreshAll()}
 async function deleteTable(id){if(orders.some(o=>o.table_id===id)){alert('โต๊ะนี้มีออเดอร์อยู่ ลบออเดอร์ก่อน');return}if(confirm('ลบโต๊ะนี้ใช่หรือไม่?')){await dbDelete('star_tables',id);refreshAll()}}
-
 async function openMenuModal(m=null){
   const parsed = m ? parseMenu(m) : { img: '', desc: '', cat: '', icon: '' };
   showModal(`
     <h3>${m?'แก้ไข':'เพิ่ม'}เมนู</h3>
     <div class="field"><label>ชื่อเมนู</label><input id="menuName" value="${m?esc(m.name):''}"></div>
     <div class="field"><label>ราคา</label><input id="menuPrice" type="number" step="0.01" value="${m?m.price:''}"></div>
-    <div class="field">
-      <label>ลิงก์รูปภาพ ( Discord หรือ เว็บฝากรูป )</label>
-      <input id="menuImg" placeholder="คัดลอกลิงก์รูปภาพมาวางที่นี่..." value="${esc(parsed.img)}">
-    </div>
+    <div class="field"><label>ลิงก์รูปภาพ</label><input id="menuImg" placeholder="คัดลอกลิงก์มาวาง" value="${esc(parsed.img)}"></div>
     <div class="field"><label>หมวดหมู่เมนู</label><input id="menuCat" placeholder="เช่น อาหาร, ขนมหวาน" value="${esc(parsed.cat)}"></div>
-    <div class="field"><label>รายละเอียดเพิ่มเติม</label><textarea id="menuDesc">${esc(parsed.desc)}</textarea></div>
+    <div class="field"><label>รายละเอียด</label><textarea id="menuDesc">${esc(parsed.desc)}</textarea></div>
     <div class="actions"><button class="btn" onclick="closeModal()">ยกเลิก</button><button class="primary" onclick="${m?`saveMenu(${m.id})`:'addMenu()'}">บันทึก</button></div>
   `);
 }
 function editMenu(id){openMenuModal(menus.find(x=>x.id===id))}
 async function addMenu(){
-  let n=document.getElementById('menuName').value.trim(),
-      p=Number(document.getElementById('menuPrice').value),
-      img=document.getElementById('menuImg').value.trim(),
-      cat=document.getElementById('menuCat').value.trim(),
-      d=document.getElementById('menuDesc').value.trim();
+  let n=document.getElementById('menuName').value.trim(), p=Number(document.getElementById('menuPrice').value), img=document.getElementById('menuImg').value.trim(), cat=document.getElementById('menuCat').value.trim(), d=document.getElementById('menuDesc').value.trim();
   if(!n||!p)return alert('กรอกชื่อและราคา');
-  
   let fullDesc = JSON.stringify({ image: img, desc: d, cat: cat || "ทั่วไป", icon: "🍽️" });
-  await dbInsert('star_menus',{name:n,price:p,description:fullDesc});
-  closeModal();refreshAll();
+  await dbInsert('star_menus',{name:n,price:p,description:fullDesc}); closeModal();refreshAll();
 }
 async function saveMenu(id){
-  let n=document.getElementById('menuName').value.trim(),
-      p=Number(document.getElementById('menuPrice').value),
-      img=document.getElementById('menuImg').value.trim(),
-      cat=document.getElementById('menuCat').value.trim(),
-      d=document.getElementById('menuDesc').value.trim();
-      
+  let n=document.getElementById('menuName').value.trim(), p=Number(document.getElementById('menuPrice').value), img=document.getElementById('menuImg').value.trim(), cat=document.getElementById('menuCat').value.trim(), d=document.getElementById('menuDesc').value.trim();
   let fullDesc = JSON.stringify({ image: img, desc: d, cat: cat || "ทั่วไป", icon: "🍽️" });
-  await dbUpdate('star_menus',id,{name:n,price:p,description:fullDesc});
-  closeModal();refreshAll();
+  await dbUpdate('star_menus',id,{name:n,price:p,description:fullDesc}); closeModal();refreshAll();
 }
 async function deleteMenu(id){if(confirm('ลบเมนูนี้ใช่หรือไม่?')){await dbDelete('star_menus',id);refreshAll()}}
+
 function showModal(h){document.getElementById('modalBox').innerHTML=h;document.getElementById('modal').classList.remove('hidden')}
 function closeModal(){document.getElementById('modal').classList.add('hidden')}
 function money(n){return Number(n||0).toLocaleString('th-TH',{minimumFractionDigits:2})+' ฿'}
